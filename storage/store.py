@@ -268,8 +268,96 @@ def add_quiz_result(learner_id: str, concept_id: str, correct: bool, response_ti
         }
 
 
+def add_learner(name: str, registration_no: str = "") -> dict:
+    import re
+    with _lock:
+        data = _read()
+        name_clean = name.strip()
+        slug_base = "L_" + re.sub(r'[^A-Z0-9]+', '_', name_clean.upper()).strip('_')
+        if not slug_base or slug_base == "L_":
+            slug_base = "L_LEARNER"
+
+        lid = slug_base
+        counter = 2
+        while lid in data["learners"]:
+            lid = f"{slug_base}-{counter}"
+            counter += 1
+
+        reg_no = registration_no.strip() if registration_no else ""
+        data["learners"][lid] = {
+            "name": name_clean,
+            "registration_no": reg_no,
+            "concepts": {},
+            "history": [],
+        }
+        _write(data)
+        return {
+            "learner_id": lid,
+            "name": name_clean,
+            "registration_no": reg_no,
+        }
+
+
+def delete_learner(learner_id: str) -> bool:
+    with _lock:
+        data = _read()
+        if learner_id not in data["learners"]:
+            return False
+        del data["learners"][learner_id]
+        _write(data)
+        return True
+
+
+def add_concept(learner_id: str, name: str, difficulty: float) -> dict:
+    import re
+    with _lock:
+        data = _read()
+        learner = data["learners"].get(learner_id)
+        if learner is None:
+            return None
+
+        name_clean = name.strip()
+        slug_base = re.sub(r'[^a-z0-9]+', '_', name_clean.lower()).strip('_')
+        if not slug_base:
+            slug_base = "concept"
+
+        cid = slug_base
+        counter = 2
+        while cid in learner["concepts"]:
+            cid = f"{slug_base}-{counter}"
+            counter += 1
+
+        current_day = data.get("current_day", 0)
+        concept_obj = {
+            "name": name_clean,
+            "strength": 6.0,
+            "last_review": current_day,
+            "difficulty": round(float(difficulty), 4),
+            "review_count": 0,
+            "correct_count": 0,
+            "avg_response_time": None,
+            "rolling_quiz_accuracy": None,
+            "quiz_history": [],
+        }
+        learner["concepts"][cid] = concept_obj
+        _write(data)
+        return {"concept_id": cid, **concept_obj}
+
+
+def delete_concept(learner_id: str, concept_id: str) -> bool:
+    with _lock:
+        data = _read()
+        learner = data["learners"].get(learner_id)
+        if learner is None or concept_id not in learner["concepts"]:
+            return False
+        del learner["concepts"][concept_id]
+        _write(data)
+        return True
+
+
 def reset():
     """Reset storage back to the seed demo data (useful for re-running demos)."""
     with _lock:
         _write(deepcopy(SEED_DATA))
+
 

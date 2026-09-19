@@ -31,6 +31,7 @@ from routes.schedule import schedule_bp
 from routes.quiz import quiz_bp
 from routes.misc import misc_bp
 from routes.analytics import analytics_bp
+from routes.learners import learners_bp
 
 
 def create_app():
@@ -44,6 +45,7 @@ def create_app():
     app.register_blueprint(quiz_bp)
     app.register_blueprint(misc_bp)
     app.register_blueprint(analytics_bp)
+    app.register_blueprint(learners_bp)
 
     @app.get("/")
     def index():
@@ -52,6 +54,11 @@ def create_app():
             "endpoints": [
                 "GET  /api/health",
                 "GET  /api/learners",
+                "POST /api/learners",
+                "GET  /api/learners/<learner_id>",
+                "DELETE /api/learners/<learner_id>",
+                "POST /api/learners/<learner_id>/concepts",
+                "DELETE /api/learners/<learner_id>/concepts/<concept_id>",
                 "GET  /api/concepts?learner_id=",
                 "GET  /api/concepts/weak?learner_id=",
                 "GET  /api/analytics?learner_id=",

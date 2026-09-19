@@ -276,4 +276,50 @@ def test_predictor_model_version_fields(client):
     assert "sklearn_version" in body
 
 
+def test_learner_crud_lifecycle(client):
+    # Create learner
+    create_res = client.post("/api/learners", json={"name": "Priya Sharma", "registration_no": "2104251040099"})
+    assert create_res.status_code == 201
+    lid = create_res.get_json()["learner_id"]
+    assert lid == "L_PRIYA_SHARMA"
+
+    # Duplicate name deduplication
+    create_res2 = client.post("/api/learners", json={"name": "Priya Sharma"})
+    assert create_res2.status_code == 201
+    lid2 = create_res2.get_json()["learner_id"]
+    assert lid2 == "L_PRIYA_SHARMA-2"
+
+    # Get created learner
+    get_res = client.get(f"/api/learners/{lid}")
+    assert get_res.status_code == 200
+    assert get_res.get_json()["name"] == "Priya Sharma"
+
+    # Invalid difficulty returns 400
+    bad_concept = client.post(f"/api/learners/{lid}/concepts", json={"name": "Graph Theory", "difficulty": 1.5})
+    assert bad_concept.status_code == 400
+
+    # Create concept
+    concept_res = client.post(f"/api/learners/{lid}/concepts", json={"name": "Graph Theory", "difficulty": 0.55})
+    assert concept_res.status_code == 201
+    cid = concept_res.get_json()["concept_id"]
+    assert cid == "graph_theory"
+
+    # Schedule works for created learner
+    sched_res = client.post("/api/schedule/generate", json={"learner_id": lid})
+    assert sched_res.status_code == 200
+    assert len(sched_res.get_json()["schedule"]) == 1
+
+    # Delete concept
+    del_c_res = client.delete(f"/api/learners/{lid}/concepts/{cid}")
+    assert del_c_res.status_code == 204
+
+    # Delete learner
+    del_l_res = client.delete(f"/api/learners/{lid}")
+    assert del_l_res.status_code == 204
+
+    # Confirm deleted
+    assert client.get(f"/api/learners/{lid}").status_code == 404
+
+
+
 
