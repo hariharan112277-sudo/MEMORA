@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEMORA — Cognitive Learning Retention Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #141b30;
+      --panel-border: #232c4a;
+      --text: #e8ecf8;
+      --muted: #8b94b3;
+      --accent: #4f7cff;
+      --accent-hover: #3b68ed;
+      --stable: #2ecc71;
+      --weak: #f39c12;
+      --critical: #e74c3c;
+      --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    /* Layout */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header */
+    header {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 16px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .brand-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    select, input, button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    select {
+      background: #0d1326;
+      color: var(--text);
+      border: 1px solid var(--panel-border);
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .chip-day {
+      background: rgba(79, 124, 255, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(79, 124, 255, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+    .btn-danger { background: rgba(231, 76, 60, 0.2); color: var(--critical); border: 1px solid rgba(231, 76, 60, 0.4); }
+    .btn-danger:hover { background: rgba(231, 76, 60, 0.4); }
+
+    .input-num {
+      width: 50px;
+      background: #0d1326;
+      color: var(--text);
+      border: 1px solid var(--panel-border);
+      padding: 7px;
+      text-align: center;
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .kpi-card {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .kpi-title { font-size: 0.85rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-value { font-size: 2rem; font-weight: 700; margin-top: 8px; }
+    .kpi-value.stable { color: var(--stable); }
+    .kpi-value.weak { color: var(--weak); }
+    .kpi-value.critical { color: var(--critical); }
+    .kpi-value.accent { color: var(--accent); }
+
+    /* Main Content Split */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 12px;
+    }
+    .panel-title { font-size: 1.1rem; font-weight: 600; }
+
+    /* Status Pills */
+    .pill {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+    .pill.stable { background: rgba(46, 204, 113, 0.15); color: var(--stable); border: 1px solid rgba(46, 204, 113, 0.3); }
+    .pill.weak { background: rgba(243, 156, 18, 0.15); color: var(--weak); border: 1px solid rgba(243, 156, 18, 0.3); }
+    .pill.critical { background: rgba(231, 76, 60, 0.15); color: var(--critical); border: 1px solid rgba(231, 76, 60, 0.3); }
+
+    /* Concept Rows */
+    .concept-list { display: flex; flex-direction: column; gap: 12px; }
+    .concept-row {
+      background: #0d1326;
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .concept-row-top { display: flex; justify-content: space-between; align-items: center; }
+    .concept-name { font-weight: 600; font-size: 0.95rem; }
+    .concept-meta { display: flex; align-items: center; gap: 12px; font-size: 0.8rem; color: var(--muted); }
+    .bar-container {
+      height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px;
+      overflow: hidden;
+      width: 100%;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease, background-color 0.4s ease;
+    }
+
+    /* Schedule Items */
+    .schedule-list { display: flex; flex-direction: column; gap: 10px; }
+    .schedule-item {
+      background: #0d1326;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .schedule-badge { font-weight: 700; font-size: 0.85rem; }
+    .schedule-badge.overdue { color: var(--critical); }
+    .schedule-badge.today { color: var(--weak); }
+    .schedule-badge.future { color: var(--muted); }
+
+    /* Charts Section */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 1024px) {
+      .charts-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .chart-container { position: relative; height: 260px; width: 100%; }
+
+    /* HTML Fallback Bar Charts */
+    .fallback-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      height: 200px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--panel-border);
+    }
+    .fallback-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .fallback-bar {
+      width: 100%;
+      max-width: 40px;
+      background: var(--accent);
+      border-radius: 4px 4px 0 0;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      max-width: 560px;
+      width: 90%;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .timer-badge {
+      background: rgba(243, 156, 18, 0.15);
+      color: var(--weak);
+      border: 1px solid rgba(243, 156, 18, 0.3);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .option-btn {
+      background: #0d1326;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    .option-btn:hover {
+      border-color: var(--accent);
+      background: rgba(79, 124, 255, 0.08);
+    }
+    .option-btn.correct { background: rgba(46, 204, 113, 0.2) !important; border-color: var(--stable) !important; color: #fff; }
+    .option-btn.wrong { background: rgba(231, 76, 60, 0.2) !important; border-color: var(--critical) !important; color: #fff; }
+
+    .feedback-box {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+    .feedback-box.correct { background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.3); color: var(--stable); }
+    .feedback-box.wrong { background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.3); color: var(--critical); }
+
+    /* Toast */
+    #toast-area {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: rgba(231, 76, 60, 0.9);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      font-size: 0.9rem;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon"></div>
+        <span>MEMORA</span>
+      </div>
+      <div class="controls">
+        <label for="learner-select" class="sr-only" style="display:none;">Learner</label>
+        <select id="learner-select" aria-label="Select Learner" onchange="onLearnerChange()"></select>
+
+        <div class="chip-day" id="day-chip">Day 0</div>
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="btn btn-secondary" onclick="advanceDay(1)">+1 Day</button>
+          <input type="number" id="custom-days" class="input-num" value="7" min="1" max="90" title="Custom days">
+          <button class="btn btn-secondary" onclick="advanceCustomDays()">+N</button>
+        </div>
+
+        <button class="btn btn-danger" onclick="resetDemo()">Reset</button>
+      </div>
+    </header>
+
+    <!-- KPI Grid -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Overall Retention</div>
+        <div class="kpi-value accent" id="kpi-overall">--%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Stable Concepts</div>
+        <div class="kpi-value stable" id="kpi-stable">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Weak Concepts</div>
+        <div class="kpi-value weak" id="kpi-weak">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Critical Concepts</div>
+        <div class="kpi-value critical" id="kpi-critical">0</div>
+      </div>
+    </div>
+
+    <!-- Main Content Split -->
+    <div class="main-grid">
+      <!-- Left Panel: All Concepts -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Tracked Concepts</div>
+          <span style="font-size: 0.8rem; color: var(--muted);" id="concept-count-label">0 concepts</span>
+        </div>
+        <div class="concept-list" id="concept-list"></div>
+      </div>
+
+      <!-- Right Panel Stack -->
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <!-- Weak Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title" style="color: var(--weak);">Weak & Critical Priority</div>
+          </div>
+          <div id="weak-list" class="concept-list"></div>
+        </div>
+
+        <!-- Schedule Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Revision Schedule</div>
+            <span id="overdue-badge" class="pill critical" style="display:none;">0 Overdue</span>
+          </div>
+          <div id="schedule-list" class="schedule-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title" id="curve-chart-title">Retention Curve</div>
+          <span class="pill stable" id="ml-badge">ML Active</span>
+        </div>
+        <div class="chart-container" id="curve-chart-wrapper">
+          <canvas id="curveChart"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Retention Trend</div>
+          <span style="font-size: 0.8rem; color: var(--muted);">Historical Daily Avg</span>
+        </div>
+        <div class="chart-container" id="trend-chart-wrapper">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz Modal -->
+  <div class="modal-overlay" id="quiz-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div style="font-weight:700; font-size:1.1rem;" id="modal-concept-name">Concept Quiz</div>
+        <div class="timer-badge" id="modal-timer">0.0s</div>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-area" aria-live="polite"></div>
+
+  <script>
+    const API_BASE = "";
+    let currentLearnerId = "L_HARIHARAN";
+    let selectedConceptId = "data_structures";
+    let curveChartInst = null;
+    let trendChartInst = null;
+
+    // Quiz modal state
+    let quizQuestions = [];
+    let quizIndex = 0;
+    let quizScore = 0;
+    let quizTimerInt = null;
+    let quizStartTime = 0;
+    let initialStrength = 0;
+
+    async function api(path, opts = {}) {
+      try {
+        const res = await fetch(API_BASE + path, {
+          headers: { "Content-Type": "application/json" },
+          ...opts,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showToast(data.error || `HTTP ${res.status} Error`);
+          throw new Error(data.error || "API Error");
+        }
+        return data;
+      } catch (err) {
+        showToast(err.message || "Network Error");
+        throw err;
+      }
+    }
+
+    function showToast(msg) {
+      const area = document.getElementById("toast-area");
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.textContent = msg;
+      area.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    async function init() {
+      await loadLearners();
+      await refreshAll();
+    }
+
+    async function loadLearners() {
+      try {
+        const res = await api("/api/learners");
+        const sel = document.getElementById("learner-select");
+        sel.innerHTML = "";
+        (res.learners || []).forEach(l => {
+          const opt = document.createElement("option");
+          opt.value = l.learner_id;
+          opt.textContent = `${l.name} (${l.learner_id})`;
+          sel.appendChild(opt);
+        });
+        if (res.learners && res.learners.length > 0) {
+          sel.value = currentLearnerId;
+        }
+      } catch (e) {}
+    }
+
+    async function onLearnerChange() {
+      currentLearnerId = document.getElementById("learner-select").value;
+      const conceptsRes = await api(`/api/concepts?learner_id=${currentLearnerId}`);
+      if (conceptsRes.concepts && conceptsRes.concepts.length > 0) {
+        selectedConceptId = conceptsRes.concepts[0].concept_id;
+      }
+      await refreshAll();
+    }
+
+    async function refreshAll() {
+      if (!currentLearnerId) return;
+
+      // Parallel API calls
+      const [analytics, conceptsData, weakData, scheduleData] = await Promise.all([
+        api(`/api/analytics?learner_id=${currentLearnerId}`).catch(() => null),
+        api(`/api/concepts?learner_id=${currentLearnerId}`).catch(() => null),
+        api(`/api/concepts/weak?learner_id=${currentLearnerId}`).catch(() => null),
+        api(`/api/schedule/generate`, { method: "POST", body: JSON.stringify({ learner_id: currentLearnerId }) }).catch(() => null),
+      ]);
+
+      if (analytics) {
+        document.getElementById("day-chip").textContent = `Day ${analytics.current_day}`;
+        document.getElementById("kpi-overall").textContent = `${Math.round(analytics.overall_retention * 100)}%`;
+        document.getElementById("kpi-stable").textContent = analytics.counts.stable || 0;
+        document.getElementById("kpi-weak").textContent = analytics.counts.weak || 0;
+        document.getElementById("kpi-critical").textContent = analytics.counts.critical || 0;
+        renderTrendChart(analytics.trend || []);
+      }
+
+      if (conceptsData) {
+        renderConcepts(conceptsData.concepts || []);
+      }
+
+      if (weakData) {
+        renderWeak(weakData.weak_concepts || []);
+      }
+
+      if (scheduleData) {
+        renderSchedule(scheduleData.schedule || [], scheduleData.overdue_count || 0);
+      }
+
+      if (selectedConceptId) {
+        renderCurveChart(selectedConceptId);
+      }
+    }
+
+    function renderConcepts(concepts) {
+      document.getElementById("concept-count-label").textContent = `${concepts.length} concepts`;
+      const container = document.getElementById("concept-list");
+      container.innerHTML = "";
+
+      concepts.forEach(c => {
+        const pct = Math.round(c.retention * 100);
+        const color = c.status === "stable" ? "var(--stable)" : c.status === "weak" ? "var(--weak)" : "var(--critical)";
+        
+        const row = document.createElement("div");
+        row.className = "concept-row";
+        row.innerHTML = `
+          <div class="concept-row-top">
+            <div>
+              <span class="concept-name">${c.name}</span>
+              <span class="pill ${c.status}" style="margin-left: 8px;">${c.status}</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="selectConceptForCurve('${c.concept_id}')">📈</button>
+              <button class="btn" style="padding: 4px 10px; font-size: 0.8rem;" onclick="startQuizModal('${c.concept_id}', '${c.name.replace(/'/g, "\\'")}')">Revise</button>
+            </div>
+          </div>
+          <div class="concept-meta">
+            <span>S: ${c.strength}d</span>
+            <span>Last: Day ${c.last_review}</span>
+            <span>Acc: ${c.rolling_quiz_accuracy !== null && c.rolling_quiz_accuracy !== undefined ? Math.round(c.rolling_quiz_accuracy * 100) + '%' : 'N/A'}</span>
+            <span style="margin-left:auto; font-weight:700; color:${color}">${pct}%</span>
+          </div>
+          <div class="bar-container">
+            <div class="bar-fill" style="width: ${pct}%; background-color: ${color}"></div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function renderWeak(weakConcepts) {
+      const container = document.getElementById("weak-list");
+      container.innerHTML = "";
+
+      if (weakConcepts.length === 0) {
+        container.innerHTML = `<div style="color: var(--muted); font-size: 0.85rem; padding: 10px 0;">All concepts are in stable condition!</div>`;
+        return;
+      }
+
+      weakConcepts.forEach(c => {
+        const pct = Math.round(c.retention * 100);
+        const color = c.status === "critical" ? "var(--critical)" : "var(--weak)";
+
+        const row = document.createElement("div");
+        row.className = "concept-row";
+        row.innerHTML = `
+          <div class="concept-row-top">
+            <div>
+              <span class="concept-name">${c.name}</span>
+              <span class="pill ${c.status}" style="margin-left: 8px;">${c.status}</span>
+            </div>
+            <button class="btn" style="padding: 4px 10px; font-size: 0.8rem;" onclick="startQuizModal('${c.concept_id}', '${c.name.replace(/'/g, "\\'")}')">Revise →</button>
+          </div>
+          <div class="concept-meta">
+            <span>Retention: <strong style="color:${color}">${pct}%</strong></span>
+            <span>S: ${c.strength}d</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function renderSchedule(schedule, overdueCount) {
+      const container = document.getElementById("schedule-list");
+      container.innerHTML = "";
+
+      const overdueBadge = document.getElementById("overdue-badge");
+      if (overdueCount > 0) {
+        overdueBadge.style.display = "inline-block";
+        overdueBadge.textContent = `${overdueCount} Overdue`;
+      } else {
+        overdueBadge.style.display = "none";
+      }
+
+      schedule.forEach(s => {
+        let text = "";
+        let badgeClass = "future";
+        if (s.overdue) {
+          text = `OVERDUE by ${s.days_overdue}d`;
+          badgeClass = "overdue";
+        } else if (s.due_in_days === 0) {
+          text = "Due today";
+          badgeClass = "today";
+        } else {
+          text = `Due in ${s.due_in_days}d`;
+        }
+
+        const item = document.createElement("div");
+        item.className = "schedule-item";
+        item.innerHTML = `
+          <div>
+            <div style="font-weight:600; font-size:0.9rem;">${s.concept_name}</div>
+            <div style="font-size:0.75rem; color:var(--muted);">Current retention: ${Math.round(s.current_retention * 100)}%</div>
+          </div>
+          <div class="schedule-badge ${badgeClass}">${text}</div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function selectConceptForCurve(cid) {
+      selectedConceptId = cid;
+      renderCurveChart(cid);
+    }
+
+    async function renderCurveChart(cid) {
+      const data = await api("/api/retention/predict", {
+        method: "POST",
+        body: JSON.stringify({ learner_id: currentLearnerId, concept_id: cid })
+      }).catch(() => null);
+
+      if (!data) return;
+
+      document.getElementById("curve-chart-title").textContent = `Retention Curve — ${data.concept_name}`;
+      const badge = document.getElementById("ml-badge");
+      badge.textContent = data.ml_method === "random_forest" ? "ML: Random Forest" : "Fallback";
+      badge.className = `pill ${data.ml_method === "random_forest" ? 'stable' : 'weak'}`;
+
+      if (window.Chart) {
+        const ctx = document.getElementById("curveChart").getContext("2d");
+        if (curveChartInst) curveChartInst.destroy();
+
+        const labels = data.curve.map(p => `Day ${p.day}`);
+        const values = data.curve.map(p => p.retention);
+
+        curveChartInst = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Retention Curve (%)",
+                data: values,
+                borderColor: "#4f7cff",
+                backgroundColor: "rgba(79, 124, 255, 0.1)",
+                fill: true,
+                tension: 0.3,
+              },
+              {
+                label: "Threshold (80%)",
+                data: Array(values.length).fill(80),
+                borderColor: "#e74c3c",
+                borderDash: [5, 5],
+                pointRadius: 0,
+                fill: false,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { min: 0, max: 100, grid: { color: "#232c4a" }, ticks: { color: "#8b94b3" } },
+              x: { grid: { color: "#232c4a" }, ticks: { color: "#8b94b3" } }
+            },
+            plugins: { legend: { labels: { color: "#e8ecf8" } } }
+          }
+        });
+      } else {
+        // Fallback HTML Bar Chart
+        const wrapper = document.getElementById("curve-chart-wrapper");
+        wrapper.innerHTML = `<div class="fallback-chart">` +
+          data.curve.map(p => `
+            <div class="fallback-col">
+              <div class="fallback-bar" style="height:${p.retention}%;"></div>
+              <span style="font-size:0.7rem; color:var(--muted);">${p.day}d</span>
+            </div>
+          `).join("") + `</div>`;
+      }
+    }
+
+    function renderTrendChart(trend) {
+      if (!trend || trend.length === 0) {
+        document.getElementById("trend-chart-wrapper").innerHTML = `<div style="color:var(--muted); padding:40px; text-align:center;">Advance days to accumulate trend history.</div>`;
+        return;
+      }
+
+      if (window.Chart) {
+        const wrapper = document.getElementById("trend-chart-wrapper");
+        if (!document.getElementById("trendChart")) {
+          wrapper.innerHTML = '<canvas id="trendChart"></canvas>';
+        }
+        const ctx = document.getElementById("trendChart").getContext("2d");
+        if (trendChartInst) trendChartInst.destroy();
+
+        trendChartInst = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: trend.map(t => `Day ${t.day}`),
+            datasets: [{
+              label: "Avg Retention (%)",
+              data: trend.map(t => Math.round(t.avg_retention * 100)),
+              borderColor: "#2ecc71",
+              backgroundColor: "rgba(46, 204, 113, 0.1)",
+              fill: true,
+              tension: 0.3,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { min: 0, max: 100, grid: { color: "#232c4a" }, ticks: { color: "#8b94b3" } },
+              x: { grid: { color: "#232c4a" }, ticks: { color: "#8b94b3" } }
+            },
+            plugins: { legend: { labels: { color: "#e8ecf8" } } }
+          }
+        });
+      }
+    }
+
+    /* Quiz Modal Flow */
+    async function startQuizModal(conceptId, conceptName) {
+      selectedConceptId = conceptId;
+      document.getElementById("modal-concept-name").textContent = `Quiz: ${conceptName}`;
+      document.getElementById("quiz-modal").classList.add("active");
+
+      // Fetch concept strength before quiz
+      const conceptData = await api(`/api/concepts?learner_id=${currentLearnerId}`);
+      const conceptObj = (conceptData.concepts || []).find(c => c.concept_id === conceptId);
+      initialStrength = conceptObj ? conceptObj.strength : 5.0;
+
+      // Fetch questions
+      const res = await api(`/api/quiz/questions?learner_id=${currentLearnerId}&concept_id=${conceptId}&limit=5`).catch(() => null);
+      quizQuestions = (res && res.questions) ? res.questions : [];
+      quizIndex = 0;
+      quizScore = 0;
+
+      if (quizQuestions.length > 0) {
+        renderModalQuestion();
+      } else {
+        renderModalFallback(conceptId, conceptName);
+      }
+    }
+
+    function renderModalQuestion() {
+      const q = quizQuestions[quizIndex];
+      const body = document.getElementById("modal-body");
+
+      quizStartTime = Date.now();
+      clearInterval(quizTimerInt);
+      quizTimerInt = setInterval(() => {
+        const elapsed = ((Date.now() - quizStartTime) / 1000).toFixed(1);
+        document.getElementById("modal-timer").textContent = `${elapsed}s`;
+      }, 100);
+
+      body.innerHTML = `
+        <div style="font-size:0.8rem; color:var(--muted); margin-bottom:6px;">Question ${quizIndex + 1} of ${quizQuestions.length}</div>
+        <div style="font-size:1rem; font-weight:600; margin-bottom:16px;">${q.text}</div>
+        <div class="options-grid">
+          ${q.options.map((opt, idx) => `
+            <button class="option-btn" onclick="submitAttempt(${idx})">${opt}</button>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    async function submitAttempt(selectedIdx) {
+      clearInterval(quizTimerInt);
+      const elapsed = parseFloat(((Date.now() - quizStartTime) / 1000).toFixed(1));
+      const q = quizQuestions[quizIndex];
+
+      const res = await api("/api/quiz/attempt", {
+        method: "POST",
+        body: JSON.stringify({
+          learner_id: currentLearnerId,
+          concept_id: selectedConceptId,
+          question_id: q.id,
+          selected_option: selectedIdx,
+          response_time: elapsed
+        })
+      });
+
+      if (!res) return;
+
+      if (res.correct) quizScore++;
+
+      // Show immediate feedback
+      const btns = document.querySelectorAll(".option-btn");
+      btns.forEach((b, idx) => {
+        b.disabled = true;
+        if (idx === res.correct_option) b.classList.add("correct");
+        if (idx === selectedIdx && !res.correct) b.classList.add("wrong");
+      });
+
+      const body = document.getElementById("modal-body");
+      const feedback = document.createElement("div");
+      feedback.className = `feedback-box ${res.correct ? 'correct' : 'wrong'}`;
+      feedback.innerHTML = `<strong>${res.correct ? 'Correct!' : 'Incorrect'}</strong> ${res.explanation || ''}`;
+      body.appendChild(feedback);
+
+      setTimeout(() => {
+        quizIndex++;
+        if (quizIndex < quizQuestions.length) {
+          renderModalQuestion();
+        } else {
+          renderQuizSummary(res.new_strength, res.next_review_estimate_days);
+        }
+      }, 1400);
+    }
+
+    function renderModalFallback(conceptId, conceptName) {
+      clearInterval(quizTimerInt);
+      document.getElementById("modal-timer").textContent = "Self-Report";
+      const body = document.getElementById("modal-body");
+      body.innerHTML = `
+        <div style="font-size:1rem; font-weight:600; margin-bottom:16px;">Did you recall '${conceptName}' correctly?</div>
+        <div style="display:flex; gap:12px;">
+          <button class="btn" style="flex:1; background:var(--stable);" onclick="submitFallback(true)">Yes, I recalled it</button>
+          <button class="btn btn-danger" style="flex:1;" onclick="submitFallback(false)">No, I forgot</button>
+        </div>
+      `;
+    }
+
+    async function submitFallback(correct) {
+      const res = await api("/api/quiz/submit", {
+        method: "POST",
+        body: JSON.stringify({
+          learner_id: currentLearnerId,
+          concept_id: selectedConceptId,
+          correct: correct
+        })
+      });
+
+      if (res) {
+        quizScore = correct ? 1 : 0;
+        quizQuestions = [1];
+        renderQuizSummary(res.new_strength, res.next_review_estimate_days);
+      }
+    }
+
+    function renderQuizSummary(newStrength, nextReviewDays) {
+      clearInterval(quizTimerInt);
+      document.getElementById("modal-timer").textContent = "Done";
+      const body = document.getElementById("modal-body");
+
+      body.innerHTML = `
+        <div style="text-align:center; padding:10px 0; display:flex; flex-direction:column; gap:16px;">
+          <div style="font-size:1.5rem; font-weight:700;">Quiz Completed!</div>
+          <div style="font-size:1.1rem; color:var(--accent); font-weight:600;">
+            Score: ${quizScore} / ${quizQuestions.length} Correct
+          </div>
+          <div style="background:#0d1326; border:1px solid var(--panel-border); border-radius:10px; padding:16px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
+              <span>Memory Strength</span>
+              <span>${initialStrength}d → <strong>${newStrength}d</strong></span>
+            </div>
+            <div style="font-size:0.85rem; color:var(--muted);">Next recommended review in ~${nextReviewDays} days</div>
+          </div>
+          <button class="btn" style="width:100%; justify-content:center; padding:12px;" onclick="closeQuizModal()">Close & Refresh</button>
+        </div>
+      `;
+    }
+
+    function closeQuizModal() {
+      document.getElementById("quiz-modal").classList.remove("active");
+      refreshAll();
+    }
+
+    /* Day Simulator & Reset */
+    async function advanceDay(n) {
+      await api("/api/day/advance", {
+        method: "POST",
+        body: JSON.stringify({ by: n })
+      });
+      await refreshAll();
+    }
+
+    async function advanceCustomDays() {
+      const val = parseInt(document.getElementById("custom-days").value) || 1;
+      await advanceDay(val);
+    }
+
+    async function resetDemo() {
+      if (confirm("Are you sure you want to reset all data back to initial seed state?")) {
+        await api("/api/reset", { method: "POST" });
+        await refreshAll();
+      }
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

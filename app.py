@@ -20,7 +20,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from flask import Flask
+from flask import Flask, send_file
 from flask_cors import CORS
 
 from config import Config
@@ -51,7 +51,9 @@ def create_app():
     def index():
         return {
             "service": "MEMORA — Cognitive Learning Retention Intelligence System",
+            "dashboard": "GET /dashboard",
             "endpoints": [
+                "GET  /dashboard",
                 "GET  /api/health",
                 "GET  /api/learners",
                 "POST /api/learners",
@@ -69,6 +71,10 @@ def create_app():
                 "POST /api/reset",
             ],
         }
+
+    @app.get("/dashboard")
+    def dashboard():
+        return send_file(os.path.join(Config.BASE_DIR, "memora-frontend.html"))
 
     return app
 
