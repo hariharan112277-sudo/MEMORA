@@ -50,6 +50,16 @@ bash scripts/verify.sh
 
 ---
 
+## Interface Screenshots
+
+### Dashboard Overview & Retention Curve
+![MEMORA Dashboard](docs/screenshot-dashboard.png)
+
+### Server-Side Graded Quiz Engine
+![MEMORA Quiz Engine](docs/screenshot-quiz.png)
+
+---
+
 ## Dashboard Features
 
 - **KPI Cards**: Overall learner retention %, count of Stable ($\ge 75\%$), Weak ($50-75\%$), and Critical ($< 50\%$) concepts.

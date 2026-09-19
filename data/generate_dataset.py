@@ -47,8 +47,6 @@ def generate(n_samples: int = N_SAMPLES, n_learners: int = N_LEARNERS, seed: int
 
         days_since_last_review = float(rng.integers(0, 22))
         attempt_count = int(rng.integers(1, 6))
-        response_time = round(float(rng.normal(18 - 6 * (1 - difficulty), 4)), 2)
-        response_time = max(3.0, response_time)
 
         true_retention = retention(base_strength, days_since_last_review)
 
