@@ -29,6 +29,7 @@ export default function App() {
       <AmbientBackground />
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/landing" element={<LandingPage />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/signup" element={<AuthPage mode="signup" />} />
 
