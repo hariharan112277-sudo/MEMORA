@@ -77,10 +77,13 @@ export function normalizeConcept(c = {}) {
   const elapsed =
     c.elapsed_days ?? (retention > 0 && retention < 1 ? -strength * Math.log(retention) : retention >= 1 ? 0 : strength * 4);
   const accuracy = c.accuracy != null ? toFrac(c.accuracy) : c.reviews ? toFrac((c.correct || 0) / c.reviews) : 0.7;
+  const rawId = c.id ?? c.concept_id ?? c.topic_id;
+  const rawName = c.name ?? c.title ?? c.concept_name ?? c.topic_name;
+  const name = rawName || (rawId ? String(rawId).replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) : 'Concept');
   return {
     ...c,
-    id: c.id ?? c.concept_id ?? c.topic_id,
-    name: c.name ?? c.title ?? 'Untitled concept',
+    id: rawId,
+    name,
     subject_id: c.subject_id,
     subject_name: c.subject_name ?? c.subject ?? '',
     retention,
