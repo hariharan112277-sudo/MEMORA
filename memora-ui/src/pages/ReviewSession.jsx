@@ -113,8 +113,8 @@ export default function ReviewSession() {
       setAnswers((a) => [...a, { correct: localCorrect, timeMs }]);
     }
     const call = api.submitQuizAttempt({
-      learner_id: lid, concept_id: topicId, question_id: q.id, selected_index: i,
-      correct: local ? localCorrect : undefined, time_ms: timeMs,
+      learner_id: lid, concept_id: topicId, question_id: q.id, selected_option: i, selected_index: i,
+      correct: local ? localCorrect : undefined, response_time: timeMs / 1000, time_ms: timeMs,
     });
     pendingRef.current = call.catch(() => {});
     try {

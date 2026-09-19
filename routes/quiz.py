@@ -47,10 +47,18 @@ def attempt():
     """
     body = request.get_json(force=True, silent=True) or {}
     learner_id = body.get("learner_id")
-    concept_id = body.get("concept_id")
+    concept_id = body.get("concept_id") or body.get("topic_id")
     question_id = body.get("question_id")
     selected_option = body.get("selected_option")
+    if selected_option is None:
+        selected_option = body.get("selected_index")
+
     response_time = body.get("response_time")
+    if response_time is None and body.get("time_ms") is not None:
+        try:
+            response_time = float(body.get("time_ms")) / 1000.0
+        except (ValueError, TypeError):
+            response_time = None
 
     if not learner_id or not concept_id or not question_id or selected_option is None:
         return jsonify({"error": "learner_id, concept_id, question_id and selected_option are required"}), 400
@@ -91,6 +99,7 @@ def attempt():
         "question_id": question_id,
         "correct": is_correct,
         "correct_option": correct_option,
+        "correct_index": correct_option,
         "explanation": q_data.get("explanation", ""),
         "previous_strength": result["previous_strength"],
         "new_strength": result["new_strength"],
