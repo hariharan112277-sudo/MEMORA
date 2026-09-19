@@ -50,13 +50,38 @@ SEED_DATA = {
 }
 
 
+def _migrate(data: dict) -> dict:
+    if not isinstance(data, dict):
+        return data
+    if "learners" not in data or not isinstance(data["learners"], dict):
+        data["learners"] = {}
+    for lid, learner in data["learners"].items():
+        if "history" not in learner or not isinstance(learner["history"], list):
+            learner["history"] = []
+        if "concepts" not in learner or not isinstance(learner["concepts"], dict):
+            learner["concepts"] = {}
+        for cid, concept in learner["concepts"].items():
+            if "review_count" not in concept:
+                concept["review_count"] = 0
+            if "correct_count" not in concept:
+                concept["correct_count"] = 0
+            if "avg_response_time" not in concept:
+                concept["avg_response_time"] = None
+            if "rolling_quiz_accuracy" not in concept:
+                concept["rolling_quiz_accuracy"] = None
+            if "quiz_history" not in concept:
+                concept["quiz_history"] = []
+    return data
+
+
 # ---------------------------------------------------------------- JSON backend
 
 def _read_json():
     if not os.path.exists(Config.STORAGE_FILE):
         _write_json(deepcopy(SEED_DATA))
     with open(Config.STORAGE_FILE, "r") as f:
-        return json.load(f)
+        data = json.load(f)
+    return _migrate(data)
 
 
 def _write_json(data):
@@ -85,8 +110,9 @@ def _get_mongo():
 def _read_mongo():
     db = _get_mongo()
     doc = db.state.find_one({"_id": "singleton"})
-    doc.pop("_id", None)
-    return doc
+    if doc is not None:
+        doc.pop("_id", None)
+    return _migrate(doc or deepcopy(SEED_DATA))
 
 
 def _write_mongo(data):
@@ -123,8 +149,23 @@ def get_current_day():
 
 def advance_day(by: int = 1):
     with _lock:
+        from ml import ebbinghaus
         data = _read()
-        data["current_day"] = data.get("current_day", 0) + by
+        new_day = data.get("current_day", 0) + by
+        data["current_day"] = new_day
+
+        for lid, learner in data["learners"].items():
+            h = learner.get("history", [])
+            for cid, concept in learner.get("concepts", {}).items():
+                days_since = new_day - concept.get("last_review", 0)
+                ret = ebbinghaus.retention(concept.get("strength", 1.0), days_since)
+                h.append({
+                    "day": new_day,
+                    "concept_id": cid,
+                    "retention": round(ret, 4)
+                })
+            learner["history"] = h[-90:]
+
         _write(data)
         return data["current_day"]
 
@@ -166,7 +207,69 @@ def update_concept(learner_id: str, concept_id: str, strength: float, last_revie
         return {"concept_id": concept_id, **learner["concepts"][concept_id]}
 
 
+def add_quiz_result(learner_id: str, concept_id: str, correct: bool, response_time: float = None, question_id: str = None):
+    with _lock:
+        from ml import ebbinghaus
+        data = _read()
+        learner = data["learners"].get(learner_id)
+        if learner is None or concept_id not in learner["concepts"]:
+            return None
+        concept = learner["concepts"][concept_id]
+
+        concept["review_count"] = concept.get("review_count", 0) + 1
+        if correct:
+            concept["correct_count"] = concept.get("correct_count", 0) + 1
+
+        entry = {
+            "day": data.get("current_day", 0),
+            "correct": bool(correct),
+        }
+        if response_time is not None:
+            entry["response_time"] = float(response_time)
+        if question_id is not None:
+            entry["question_id"] = str(question_id)
+
+        qh = concept.get("quiz_history", [])
+        qh.append(entry)
+        concept["quiz_history"] = qh[-20:]
+
+        recent_10 = concept["quiz_history"][-10:]
+        if recent_10:
+            correct_10 = [1.0 if item["correct"] else 0.0 for item in recent_10]
+            concept["rolling_quiz_accuracy"] = round(sum(correct_10) / len(correct_10), 4)
+        else:
+            concept["rolling_quiz_accuracy"] = None
+
+        timed_attempts = [item["response_time"] for item in concept["quiz_history"] if item.get("response_time") is not None]
+        if timed_attempts:
+            concept["avg_response_time"] = round(sum(timed_attempts) / len(timed_attempts), 2)
+        else:
+            concept["avg_response_time"] = None
+
+        old_strength = concept["strength"]
+        new_strength = ebbinghaus.update_strength(old_strength, bool(correct), concept.get("difficulty", 0.5))
+        concept["strength"] = new_strength
+        concept["last_review"] = data.get("current_day", 0)
+
+        _write(data)
+
+        return {
+            "learner_id": learner_id,
+            "concept_id": concept_id,
+            "correct": bool(correct),
+            "previous_strength": round(old_strength, 2),
+            "new_strength": round(new_strength, 2),
+            "last_review": concept["last_review"],
+            "retention_now": round(ebbinghaus.retention(new_strength, 0), 4),
+            "next_review_estimate_days": round(ebbinghaus.days_until_threshold(new_strength), 1),
+            "review_count": concept["review_count"],
+            "rolling_quiz_accuracy": concept["rolling_quiz_accuracy"],
+            "avg_response_time": concept["avg_response_time"],
+        }
+
+
 def reset():
     """Reset storage back to the seed demo data (useful for re-running demos)."""
     with _lock:
         _write(deepcopy(SEED_DATA))
+

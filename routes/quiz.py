@@ -11,33 +11,28 @@ def submit():
     """
     Submits a quiz result for a concept and updates its memory strength.
 
-    Body: { "learner_id": "L_HARIHARAN", "concept_id": "data_structures", "correct": true }
+    Body: { "learner_id": "L_HARIHARAN", "concept_id": "data_structures", "correct": true, "response_time": 12.5 }
     """
     body = request.get_json(force=True, silent=True) or {}
     learner_id = body.get("learner_id")
     concept_id = body.get("concept_id")
     correct = body.get("correct")
+    response_time = body.get("response_time")
 
     if not learner_id or not concept_id or correct is None:
         return jsonify({"error": "learner_id, concept_id and correct (bool) are required"}), 400
 
-    concept = store.get_concept(learner_id, concept_id)
-    if concept is None:
+    if response_time is not None:
+        try:
+            response_time = float(response_time)
+            if response_time < 0 or response_time > 600:
+                return jsonify({"error": "response_time must be between 0 and 600 seconds"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"error": "response_time must be a valid number"}), 400
+
+    result = store.add_quiz_result(learner_id, concept_id, bool(correct), response_time=response_time)
+    if result is None:
         return jsonify({"error": "learner or concept not found"}), 404
 
-    current_day = store.get_current_day()
-    new_strength = ebbinghaus.update_strength(
-        concept["strength"], bool(correct), concept.get("difficulty", 0.5)
-    )
-    updated = store.update_concept(learner_id, concept_id, new_strength, current_day)
+    return jsonify(result)
 
-    return jsonify({
-        "learner_id": learner_id,
-        "concept_id": concept_id,
-        "correct": bool(correct),
-        "previous_strength": round(concept["strength"], 2),
-        "new_strength": round(updated["strength"], 2),
-        "last_review": updated["last_review"],
-        "retention_now": round(ebbinghaus.retention(updated["strength"], 0), 4),
-        "next_review_estimate_days": round(ebbinghaus.days_until_threshold(updated["strength"]), 1),
-    })

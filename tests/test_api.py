@@ -100,3 +100,85 @@ def test_day_advance(client):
     res = client.post("/api/day/advance", json={"by": 3})
     assert res.status_code == 200
     assert res.get_json()["current_day"] == 3
+
+
+def test_legacy_schema_migration(tmp_path, monkeypatch):
+    import json
+    from config import Config
+    legacy_file = os.path.join(tmp_path, "legacy_db.json")
+    legacy_data = {
+        "current_day": 0,
+        "learners": {
+            "L_OLD": {
+                "name": "Old Student",
+                "concepts": {
+                    "ds": {"name": "Data Structures", "strength": 5.0, "last_review": 0, "difficulty": 0.4}
+                }
+            }
+        }
+    }
+    with open(legacy_file, "w") as f:
+        json.dump(legacy_data, f)
+
+    monkeypatch.setattr(Config, "STORAGE_FILE", legacy_file)
+    monkeypatch.setattr(Config, "STORAGE_BACKEND", "json")
+
+    data = store._read()
+    assert "history" in data["learners"]["L_OLD"]
+    c = data["learners"]["L_OLD"]["concepts"]["ds"]
+    assert c["review_count"] == 0
+    assert c["correct_count"] == 0
+    assert c["avg_response_time"] is None
+    assert c["rolling_quiz_accuracy"] is None
+    assert c["quiz_history"] == []
+
+
+def test_quiz_submit_with_response_time_and_history_cap(client):
+    for i in range(25):
+        res = client.post("/api/quiz/submit", json={
+            "learner_id": "L_HARIHARAN",
+            "concept_id": "data_structures",
+            "correct": i % 2 == 0,
+            "response_time": 10.0 + (i % 5),
+        })
+        assert res.status_code == 200
+
+    concept = store.get_concept("L_HARIHARAN", "data_structures")
+    assert concept["review_count"] == 25
+    assert len(concept["quiz_history"]) == 20
+    assert concept["rolling_quiz_accuracy"] is not None
+    assert concept["avg_response_time"] is not None
+
+
+def test_predict_returns_features_used(client):
+    client.post("/api/quiz/submit", json={
+        "learner_id": "L_HARIHARAN",
+        "concept_id": "data_structures",
+        "correct": True,
+        "response_time": 8.5,
+    })
+    res = client.post("/api/retention/predict", json={
+        "learner_id": "L_HARIHARAN",
+        "concept_id": "data_structures",
+    })
+    assert res.status_code == 200
+    body = res.get_json()
+    assert "features_used" in body
+    assert body["features_used"]["quiz_accuracy"] == 1.0
+    assert body["features_used"]["response_time"] == 8.5
+    assert body["features_used"]["attempt_count"] == 1
+
+
+def test_analytics_endpoint(client):
+    res = client.get("/api/analytics?learner_id=L_HARIHARAN")
+    assert res.status_code == 200
+    body = res.get_json()
+    assert body["learner_id"] == "L_HARIHARAN"
+    assert "overall_retention" in body
+    assert "counts" in body
+    assert "stable" in body["counts"]
+    assert "review_count" in body
+    assert "per_concept" in body
+    assert "trend" in body
+    assert len(body["per_concept"]) == 5
+
