@@ -66,15 +66,24 @@ if __name__ == "__main__":
     importances_sorted = dict(sorted(importances.items(), key=lambda item: item[1], reverse=True))
 
     metrics_path = os.path.join(Config.MODELS_DIR, "metrics.json")
-    dataset_version = "v1"
-    existing_history = []
+    dataset_version = "v2"
+    history = []
     if os.path.exists(metrics_path):
         try:
             with open(metrics_path, "r") as f:
-                existing_data = json.load(f)
-                existing_history = existing_data.get("history", [])
+                old_data = json.load(f)
+                history = old_data.get("history", [])
+                # If old_data was v1 and not in history, record it
+                if "dataset_version" in old_data and old_data["dataset_version"] != dataset_version:
+                    if not any(h.get("dataset_version") == old_data["dataset_version"] for h in history):
+                        history.append({
+                            "dataset_version": old_data["dataset_version"],
+                            "mae": old_data.get("mae"),
+                            "r2": old_data.get("r2"),
+                            "trained_at": old_data.get("trained_at"),
+                        })
         except Exception:
-            existing_history = []
+            history = []
 
     metrics_payload = {
         "dataset_version": dataset_version,
@@ -86,9 +95,13 @@ if __name__ == "__main__":
         "n_train": metrics["n_train"],
         "n_test": metrics["n_test"],
         "feature_importances": importances_sorted,
+        "history": history + [{
+            "dataset_version": dataset_version,
+            "mae": metrics["mae"],
+            "r2": metrics["r2"],
+            "trained_at": datetime.now(timezone.utc).isoformat(),
+        }],
     }
-    if existing_history:
-        metrics_payload["history"] = existing_history
 
     with open(metrics_path, "w") as f:
         json.dump(metrics_payload, f, indent=2)

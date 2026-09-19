@@ -1,6 +1,6 @@
 {
-  "dataset_version": "v1",
-  "trained_at": "2026-09-19T16:38:20.674333+00:00",
+  "dataset_version": "v2",
+  "trained_at": "2026-09-19T16:46:15.974475+00:00",
   "sklearn_version": "1.5.1",
   "features": [
     "difficulty",
@@ -9,15 +9,29 @@
     "response_time",
     "attempt_count"
   ],
-  "mae": 0.05,
-  "r2": 0.9429,
+  "mae": 0.0571,
+  "r2": 0.9158,
   "n_train": 4160,
   "n_test": 1040,
   "feature_importances": {
-    "quiz_accuracy": 0.9238,
-    "days_since_last_review": 0.0629,
-    "difficulty": 0.0074,
-    "response_time": 0.0045,
-    "attempt_count": 0.0014
-  }
+    "days_since_last_review": 0.9317,
+    "quiz_accuracy": 0.0411,
+    "difficulty": 0.0172,
+    "response_time": 0.0079,
+    "attempt_count": 0.0021
+  },
+  "history": [
+    {
+      "dataset_version": "v1",
+      "mae": 0.05,
+      "r2": 0.9429,
+      "trained_at": "2026-09-19T16:38:20.674333+00:00"
+    },
+    {
+      "dataset_version": "v2",
+      "mae": 0.0571,
+      "r2": 0.9158,
+      "trained_at": "2026-09-19T16:46:15.974475+00:00"
+    }
+  ]
 }

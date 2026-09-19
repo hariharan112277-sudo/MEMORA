@@ -250,3 +250,30 @@ def test_quiz_attempt_invalid_inputs(client):
     assert res2.status_code == 400
 
 
+def test_scheduler_overdue_sorting(client):
+    client.post("/api/day/advance", json={"by": 30})
+    res = client.post("/api/schedule/generate", json={"learner_id": "L_HARIHARAN"})
+    assert res.status_code == 200
+    body = res.get_json()
+    assert body["overdue_count"] == 5
+    assert len(body["schedule"]) == 5
+    for item in body["schedule"]:
+        assert item["overdue"] is True
+        assert item["days_overdue"] > 0
+    # Overdue items sorted by days_overdue descending
+    overdue_days = [item["days_overdue"] for item in body["schedule"]]
+    assert overdue_days == sorted(overdue_days, reverse=True)
+
+
+def test_predictor_model_version_fields(client):
+    res = client.post("/api/retention/predict", json={
+        "difficulty": 0.5, "days_since_last_review": 5,
+        "quiz_accuracy": 0.7, "response_time": 12.0, "attempt_count": 2
+    })
+    assert res.status_code == 200
+    body = res.get_json()
+    assert "model_version" in body
+    assert "sklearn_version" in body
+
+
+

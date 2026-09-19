@@ -51,11 +51,16 @@ def generate(n_samples: int = N_SAMPLES, n_learners: int = N_LEARNERS, seed: int
         response_time = max(3.0, response_time)
 
         true_retention = retention(base_strength, days_since_last_review)
-        # Quiz accuracy correlates with true retention, plus noise.
-        quiz_accuracy = np.clip(true_retention + rng.normal(0, 0.08), 0.0, 1.0)
-        # Label: observed retention (what we're trying to predict), with
-        # a little extra measurement noise layered on top of the true curve.
-        retention_label = np.clip(true_retention + rng.normal(0, 0.05), 0.0, 1.0)
+
+        ability = rng.normal(0, 0.07)
+        raw_accuracy = 0.65 * true_retention + 0.25 * ability + rng.normal(0, 0.10) + 0.05 * (1 - difficulty)
+        quiz_accuracy = np.clip(raw_accuracy, 0.0, 1.0)
+
+        raw_rt = rng.normal(22 - 10 * true_retention, 4)
+        response_time = np.clip(raw_rt, 3.0, 40.0)
+
+        raw_label = true_retention + rng.normal(0, 0.06)
+        retention_label = np.clip(raw_label, 0.0, 1.0)
 
         rows.append({
             "learner_id": learner_id,
@@ -64,7 +69,7 @@ def generate(n_samples: int = N_SAMPLES, n_learners: int = N_LEARNERS, seed: int
             "difficulty": round(difficulty, 2),
             "days_since_last_review": days_since_last_review,
             "quiz_accuracy": round(float(quiz_accuracy), 3),
-            "response_time": response_time,
+            "response_time": round(float(response_time), 2),
             "attempt_count": attempt_count,
             "retention_label": round(float(retention_label), 3),
         })
