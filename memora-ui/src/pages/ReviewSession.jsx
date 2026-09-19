@@ -76,8 +76,11 @@ export default function ReviewSession() {
       try {
         const [conceptsRes, quizRes] = await Promise.all([api.getConcepts(lid), api.getQuizQuestions(lid, topicId, QUIZ_LENGTH)]);
         if (!alive) return;
-        const c = normalizeConcepts(conceptsRes).find((x) => String(x.id) === String(topicId));
-        if (!c) throw new Error('This topic could not be found.');
+        let c = normalizeConcepts(conceptsRes).find((x) => String(x.id) === String(topicId));
+        if (!c) {
+          const rawTitle = quizRes?.concept_name || String(topicId).replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+          c = normalizeConcepts([{ id: topicId, concept_id: topicId, name: rawTitle, strength: 2.5, retention: 0.8 }])[0];
+        }
         const qs = asList(quizRes, 'questions').map(normalizeQuestion);
         setConcept(c);
         setQuestions(qs);

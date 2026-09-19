@@ -1,8 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BarChart3, BellRing, BrainCircuit, CalendarClock, HeartPulse, Layers, ListChecks } from 'lucide-react';
 import Logo from '../components/Logo';
 import { Button, HealthBadge } from '../components/ui';
-import { baselineRetention, rfRetention } from '../utils/memory';
+import { asList, baselineRetention, rfRetention } from '../utils/memory';
+import { useApp } from '../context/AppContext';
+import { api } from '../services/api';
 
 /* Build SVG paths for the hero curve from the same formulas the app uses. */
 function curvePath(fn, w, h, pad = 12) {
@@ -93,6 +95,33 @@ const STEPS = [
 ];
 
 export default function LandingPage() {
+  const { learner, login } = useApp();
+  const navigate = useNavigate();
+
+  const handleDemoClick = async () => {
+    if (learner) {
+      navigate('/dashboard');
+      return;
+    }
+    try {
+      const rawList = asList(await api.getLearners(), 'learners');
+      let demo = rawList.find((l) => l.id === 'l_demo' || l.id === 'L_HARIHARAN' || (l.name || '').toLowerCase().includes('demo')) || rawList[0];
+      if (!demo) {
+        demo = await api.createLearner({
+          name: 'Demo Learner',
+          email: 'demo@memora.ai',
+          goal: 'Pass an upcoming exam',
+          daily_target: 15,
+          starter_pack: true,
+        });
+      }
+      login(demo);
+      navigate('/dashboard');
+    } catch {
+      navigate('/login?demo=1');
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
@@ -103,8 +132,14 @@ export default function LandingPage() {
           <a href="#preview" className="hover:text-obsidian">Preview</a>
         </nav>
         <div className="flex items-center gap-2">
-          <Link to="/login" className="hidden px-4 py-2 text-sm font-semibold text-slate-700 hover:text-obsidian sm:block">Log in</Link>
-          <Button to="/signup" variant="dark">Get started</Button>
+          {learner ? (
+            <Button to="/dashboard" variant="dark">Go to Dashboard</Button>
+          ) : (
+            <>
+              <Link to="/login" className="hidden px-4 py-2 text-sm font-semibold text-slate-700 hover:text-obsidian sm:block">Log in</Link>
+              <Button to="/signup" variant="dark">Get started</Button>
+            </>
+          )}
         </div>
       </header>
 
@@ -120,8 +155,14 @@ export default function LandingPage() {
             Memora predicts when each concept will fade from your memory and schedules the review that saves it, across every subject you are learning.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button to="/signup" variant="dark" size="lg">Start learning free</Button>
-            <Button to="/login?demo=1" variant="ghost" size="lg">Explore the demo</Button>
+            {learner ? (
+              <Button to="/dashboard" variant="dark" size="lg">Go to Dashboard</Button>
+            ) : (
+              <>
+                <Button to="/signup" variant="dark" size="lg">Start learning free</Button>
+                <Button type="button" onClick={handleDemoClick} variant="ghost" size="lg">Explore the demo</Button>
+              </>
+            )}
           </div>
           <HeroPreview />
         </section>
@@ -169,8 +210,14 @@ export default function LandingPage() {
             <h2 className="relative mx-auto max-w-2xl text-3xl font-extrabold !text-white sm:text-4xl">Build a memory that lasts longer than the exam.</h2>
             <p className="relative mx-auto mt-4 max-w-xl text-slate-300">Create a learner profile in under a minute and get your first review queue right away.</p>
             <div className="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link to="/signup" className="btn btn-lg bg-white text-obsidian hover:bg-slate-100">Create your profile</Link>
-              <Link to="/login?demo=1" className="btn btn-lg border border-white/25 text-white hover:bg-white/10">Try the demo</Link>
+              {learner ? (
+                <Button to="/dashboard" className="btn btn-lg bg-white text-obsidian hover:bg-slate-100">Go to Dashboard</Button>
+              ) : (
+                <>
+                  <Link to="/signup" className="btn btn-lg bg-white text-obsidian hover:bg-slate-100">Create your profile</Link>
+                  <button type="button" onClick={handleDemoClick} className="btn btn-lg border border-white/25 text-white hover:bg-white/10">Try the demo</button>
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -179,7 +226,7 @@ export default function LandingPage() {
       <footer className="mx-auto max-w-6xl border-t border-slate-200/80 px-5 py-8 text-sm text-slate-500 sm:px-8">
         <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
           <Logo />
-          <p>Memora 2.0, an AI-powered cognitive memory platform.</p>
+          <p>Memora, an AI-powered cognitive memory platform.</p>
         </div>
       </footer>
     </div>

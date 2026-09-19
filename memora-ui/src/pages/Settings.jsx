@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AlertTriangle, Cloud, FastForward, RotateCcw, Save } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { DEFAULT_NOTIFICATIONS, useApp } from '../context/AppContext';
 import { getApiBase } from '../services/api';
 import { Button, Field, GlassCard, Modal, PageHeader, Toggle } from '../components/ui';
 
@@ -13,7 +13,13 @@ const NOTIFICATIONS = [
 
 export default function Settings() {
   const { learner, profile, saveProfile, mode, advanceDay, resetAll, toast } = useApp();
-  const [form, setForm] = useState(() => ({ ...profile, notifications: { ...profile.notifications } }));
+  const [form, setForm] = useState(() => ({
+    name: profile?.name || learner?.name || '',
+    goal: profile?.goal || learner?.goal || '',
+    daily_target: profile?.daily_target || 10,
+    reminder_time: profile?.reminder_time || '19:00',
+    notifications: { ...DEFAULT_NOTIFICATIONS, ...(profile?.notifications || {}) },
+  }));
   const [confirmReset, setConfirmReset] = useState(false);
   const [busy, setBusy] = useState(null);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -52,7 +58,7 @@ export default function Settings() {
           <h2 className="text-base font-bold">Profile</h2>
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
             <Field label="Full name" htmlFor="s-name"><input id="s-name" className="input" value={form.name} onChange={(e) => set('name', e.target.value)} /></Field>
-            <Field label="Email" htmlFor="s-email" hint="Email is set when you sign up."><input id="s-email" className="input bg-slate-50 text-slate-500" value={learner.email || ''} readOnly /></Field>
+            <Field label="Email" htmlFor="s-email" hint="Email is set when you sign up."><input id="s-email" className="input bg-slate-50 text-slate-500" value={learner?.email || ''} readOnly /></Field>
             <div className="sm:col-span-2">
               <Field label="Learning goal" htmlFor="s-goal"><input id="s-goal" className="input" value={form.goal} onChange={(e) => set('goal', e.target.value)} placeholder="What are you working toward?" /></Field>
             </div>

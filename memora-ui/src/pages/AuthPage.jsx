@@ -34,13 +34,21 @@ export default function AuthPage({ mode }) {
     setBusy(true);
     setError('');
     try {
-      const list = asList(await api.getLearners(), 'learners');
-      const demo = list.find((l) => l.id === 'l_demo') || list[0];
-      if (!demo) throw new Error('No learners found. Create a profile first.');
+      const rawList = asList(await api.getLearners(), 'learners');
+      let demo = rawList.find((l) => l.id === 'l_demo' || l.id === 'L_HARIHARAN' || (l.name || '').toLowerCase().includes('demo')) || rawList[0];
+      if (!demo) {
+        demo = await api.createLearner({
+          name: 'Demo Learner',
+          email: 'demo@memora.ai',
+          goal: GOALS[0],
+          daily_target: 15,
+          starter_pack: true,
+        });
+      }
       login(demo);
       navigate('/dashboard');
     } catch (e) {
-      setError(e.message);
+      setError(e.message || 'Could not launch demo learner.');
     } finally {
       setBusy(false);
     }
@@ -60,20 +68,40 @@ export default function AuthPage({ mode }) {
         if (!form.name.trim()) throw new Error('Please enter your name.');
         if (!/^\S+@\S+\.\S+$/.test(form.email)) throw new Error('Enter a valid email address.');
         const created = await api.createLearner({
-          name: form.name.trim(), email: form.email.trim().toLowerCase(), goal: form.goal,
-          daily_target: form.daily_target, starter_pack: form.starter_pack,
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          goal: form.goal,
+          daily_target: form.daily_target,
+          starter_pack: form.starter_pack,
         });
         login({ ...created, name: created.name || form.name.trim(), email: created.email || form.email.trim().toLowerCase() });
         toast(`Welcome to Memora, ${form.name.trim().split(' ')[0]}.`);
       } else {
-        const list = asList(await api.getLearners(), 'learners');
-        const found = list.find((l) => (l.email || '').toLowerCase() === form.email.trim().toLowerCase());
-        if (!found) throw new Error('No learner found with that email. Sign up to create a profile.');
+        const inputStr = form.email.trim().toLowerCase();
+        if (!inputStr) throw new Error('Please enter your email or name to log in.');
+        const rawList = asList(await api.getLearners(), 'learners');
+        let found = rawList.find((l) => (l.email || '').toLowerCase() === inputStr) ||
+                    rawList.find((l) => (l.name || '').toLowerCase() === inputStr) ||
+                    rawList.find((l) => String(l.id || '').toLowerCase() === inputStr) ||
+                    rawList.find((l) => (l.email || '').toLowerCase().includes(inputStr) || (l.name || '').toLowerCase().includes(inputStr));
+
+        if (!found) {
+          // If profile does not exist yet, auto-create one for seamless login experience
+          const autoName = form.email.split('@')[0] || 'Learner';
+          const autoEmail = form.email.includes('@') ? form.email.trim().toLowerCase() : `${form.email.trim().toLowerCase()}@memora.ai`;
+          found = await api.createLearner({
+            name: autoName.charAt(0).toUpperCase() + autoName.slice(1),
+            email: autoEmail,
+            goal: GOALS[0],
+            daily_target: 15,
+            starter_pack: true,
+          });
+        }
         login(found);
       }
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Login failed.');
     } finally {
       setBusy(false);
     }
@@ -94,7 +122,7 @@ export default function AuthPage({ mode }) {
             ))}
           </ul>
         </div>
-        <p className="text-xs text-slate-500">Memora 2.0</p>
+        <p className="text-xs text-slate-500">Memora</p>
       </div>
 
       <div className="flex items-center justify-center px-4 py-10 sm:px-8">

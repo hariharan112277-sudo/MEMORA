@@ -21,7 +21,7 @@ def get_questions():
     if not learner_id or not concept_id:
         return jsonify({"error": "learner_id and concept_id parameters are required"}), 400
 
-    concept = store.get_concept(learner_id, concept_id)
+    concept = store.get_concept(learner_id, concept_id, auto_create=True)
     if concept is None:
         return jsonify({"error": f"Learner or concept '{concept_id}' not found"}), 404
 

@@ -104,7 +104,7 @@ export function AppProvider({ children }) {
     toast('Demo data reset to its original state.');
   }, [learner, login, logout, toast]);
 
-  // Detect live vs demo backend, then make sure the stored session still exists.
+  // Detect live vs demo backend, then make sure the stored session still exists (or auto-login default learner).
   useEffect(() => {
     const off = onModeChange(setMode);
     let alive = true;
@@ -112,25 +112,28 @@ export function AppProvider({ children }) {
       await detectMode();
       if (!alive) return;
       setMode(getApiMode());
-      const stored = normalizeLearner(readJSON(LEARNER_KEY));
-      if (stored) {
-        try {
-          const rawList = asList(await api.getLearners(), 'learners');
-          const list = rawList.map(normalizeLearner);
-          if (alive && list.length && !list.some((l) => String(l.id) === String(stored.id))) {
-            // Auto-login to available learner if stored session changed
-            const fallback = list[0];
-            if (fallback) login(fallback);
+      let stored = normalizeLearner(readJSON(LEARNER_KEY));
+      try {
+        const rawList = asList(await api.getLearners(), 'learners');
+        const list = rawList.map(normalizeLearner);
+        if (alive && list.length) {
+          if (!stored || !list.some((l) => String(l.id) === String(stored.id))) {
+            // Auto-login to available learner if stored session is missing or invalid
+            const fallback = list.find((l) => l.id === 'L_HARIHARAN' || l.id === 'l_demo') || list[0];
+            if (fallback) {
+              login(fallback);
+              stored = fallback;
+            }
           }
-        } catch { /* keep session */ }
-      }
+        }
+      } catch { /* keep session */ }
       if (alive) setChecking(false);
     })();
     return () => {
       alive = false;
       off();
     };
-  }, []);
+  }, [login]);
 
   const value = useMemo(
     () => ({ learner, profile, mode, version, checking, toasts, toast, dismissToast, login, logout, saveProfile, refresh, advanceDay, resetAll }),

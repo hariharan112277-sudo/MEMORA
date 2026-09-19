@@ -74,13 +74,14 @@ function CreateSubjectModal({ open, onClose, onCreated }) {
 
 export default function SubjectsHub() {
   const { learner, version, refresh } = useApp();
+  const lid = learner?.id;
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('All');
 
-  const { data, loading, error, reload } = useAsync(async () => asList(await api.getSubjects(learner.id), 'subjects'), [learner.id, version]);
+  const { data, loading, error, reload } = useAsync(async () => (lid ? asList(await api.getSubjects(lid), 'subjects') : []), [lid, version]);
 
-  if (loading && !data) return <Spinner label="Loading subjects" />;
+  if (!learner || (loading && !data)) return <Spinner label="Loading subjects" />;
   if (error && !data) return <ErrorState error={error} onRetry={reload} />;
 
   const subjects = data || [];

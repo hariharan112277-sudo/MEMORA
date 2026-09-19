@@ -65,12 +65,14 @@ function Heatmap({ concepts }) {
 
 export default function AnalyticsHub() {
   const { learner, version } = useApp();
+  const lid = learner?.id;
   const [showBaseline, setShowBaseline] = useState(false);
 
   const { data, loading, error, reload } = useAsync(async () => {
-    const [analytics, concepts] = await Promise.all([api.getAnalytics(learner.id), api.getConcepts(learner.id)]);
+    if (!lid) return null;
+    const [analytics, concepts] = await Promise.all([api.getAnalytics(lid), api.getConcepts(lid)]);
     return { analytics: analytics || {}, concepts: normalizeConcepts(concepts) };
-  }, [learner.id, version]);
+  }, [lid, version]);
 
   const concepts = data?.concepts;
 
@@ -93,10 +95,10 @@ export default function AnalyticsHub() {
     return { curveData: rows, series: list.map(({ key, name, color }) => ({ key, name, color })) };
   }, [concepts]);
 
-  if (loading && !data) return <Spinner label="Crunching your analytics" />;
+  if (!learner || (loading && !data)) return <Spinner label="Crunching your analytics" />;
   if (error && !data) return <ErrorState error={error} onRetry={reload} />;
 
-  const { analytics: a } = data;
+  const a = data?.analytics || {};
   if (!concepts.length) {
     return (
       <>

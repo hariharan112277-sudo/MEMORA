@@ -174,16 +174,41 @@ def get_learner(learner_id: str):
     data = _read()
     learner = data["learners"].get(learner_id)
     if learner is None:
+        for lid, info in data["learners"].items():
+            if lid.lower() == str(learner_id).lower() or info.get("name", "").lower() == str(learner_id).lower():
+                return {"learner_id": lid, "current_day": data.get("current_day", 0), **info}
         return None
     return {"learner_id": learner_id, "current_day": data.get("current_day", 0), **learner}
 
 
-def get_concept(learner_id: str, concept_id: str):
+def get_concept(learner_id: str, concept_id: str, auto_create: bool = False):
     learner = get_learner(learner_id)
     if learner is None:
         return None
-    concept = learner["concepts"].get(concept_id)
+    actual_lid = learner["learner_id"]
+    concept = learner.get("concepts", {}).get(concept_id)
     if concept is None:
+        from storage import questions as questions_storage
+        has_qs = bool(questions_storage.get_questions_for_concept(concept_id))
+        if auto_create or has_qs:
+            with _lock:
+                data = _read()
+                l_data = data["learners"].get(actual_lid)
+                if l_data is not None:
+                    name = str(concept_id).replace("_", " ").title()
+                    l_data.setdefault("concepts", {})[concept_id] = {
+                        "name": name,
+                        "strength": 2.5,
+                        "last_review": data.get("current_day", 0),
+                        "difficulty": 0.5,
+                        "review_count": 0,
+                        "correct_count": 0,
+                        "avg_response_time": None,
+                        "rolling_quiz_accuracy": None,
+                        "quiz_history": []
+                    }
+                    _write(data)
+                    return {"concept_id": concept_id, **l_data["concepts"][concept_id]}
         return None
     return {"concept_id": concept_id, **concept}
 
@@ -192,13 +217,25 @@ def list_concepts(learner_id: str):
     learner = get_learner(learner_id)
     if learner is None:
         return None
-    return [{"concept_id": cid, **c} for cid, c in learner["concepts"].items()]
+    return [{"concept_id": cid, **c} for cid, c in learner.get("concepts", {}).items()]
 
 
 def update_concept(learner_id: str, concept_id: str, strength: float, last_review: int):
     with _lock:
         data = _read()
         learner = data["learners"].get(learner_id)
+        if learner is None:
+            for lid, info in data["learners"].items():
+                if lid.lower() == str(learner_id).lower():
+                    learner = info
+                    learner_id = lid
+                    break
+        if learner is None:
+            return None
+        if concept_id not in learner.get("concepts", {}):
+            get_concept(learner_id, concept_id)
+            data = _read()
+            learner = data["learners"].get(learner_id)
         if learner is None or concept_id not in learner["concepts"]:
             return None
         learner["concepts"][concept_id]["strength"] = strength
@@ -212,8 +249,26 @@ def add_quiz_result(learner_id: str, concept_id: str, correct: bool, response_ti
         from ml import ebbinghaus
         data = _read()
         learner = data["learners"].get(learner_id)
-        if learner is None or concept_id not in learner["concepts"]:
+        if learner is None:
+            for lid, info in data["learners"].items():
+                if lid.lower() == str(learner_id).lower():
+                    learner = info
+                    learner_id = lid
+                    break
+        if learner is None:
             return None
+        if concept_id not in learner.get("concepts", {}):
+            learner.setdefault("concepts", {})[concept_id] = {
+                "name": str(concept_id).replace("_", " ").title(),
+                "strength": 2.5,
+                "last_review": data.get("current_day", 0),
+                "difficulty": 0.5,
+                "review_count": 0,
+                "correct_count": 0,
+                "avg_response_time": None,
+                "rolling_quiz_accuracy": None,
+                "quiz_history": []
+            }
         concept = learner["concepts"][concept_id]
 
         concept["review_count"] = concept.get("review_count", 0) + 1

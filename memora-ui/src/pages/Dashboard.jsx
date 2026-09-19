@@ -4,7 +4,7 @@ import { AlertTriangle, ArrowRight, Brain, Flame, Gauge, Library, ListTodo, Play
 import { api } from '../services/api';
 import { useApp } from '../context/AppContext';
 import { useAsync } from '../hooks/useAsync';
-import { asList, buildCurve, DIFFICULTY_SCORE, dueLabel, fmtDays, greeting, normalizeConcepts, pct } from '../utils/memory';
+import { asList, baselineRetention, buildCurve, DIFFICULTY_SCORE, dueLabel, fmtDays, greeting, normalizeConcepts, pct } from '../utils/memory';
 import { DecayChart } from '../components/charts';
 import { Button, EmptyState, ErrorState, GlassCard, HealthBadge, KpiCard, ProgressBar, SectionTitle, Spinner } from '../components/ui';
 
@@ -33,10 +33,11 @@ function ConceptCard({ c }) {
 
 export default function Dashboard() {
   const { learner, profile, version } = useApp();
-  const lid = learner.id;
+  const lid = learner?.id;
   const [selectedId, setSelectedId] = useState(null);
 
   const { data, loading, error, reload } = useAsync(async () => {
+    if (!lid) return null;
     const [concepts, weak, schedule, analytics] = await Promise.all([
       api.getConcepts(lid), api.getWeakConcepts(lid), api.getSchedule(lid), api.getAnalytics(lid),
     ]);
@@ -56,14 +57,28 @@ export default function Dashboard() {
   const prediction = useAsync(async () => (activeId ? api.predictRetention(lid, activeId) : null), [lid, activeId, version]);
   const curve = useMemo(() => {
     const fromApi = prediction.data?.curve || prediction.data?.predicted_curve;
-    if (Array.isArray(fromApi) && fromApi.length) return fromApi.map((p, i) => ({ day: p.day ?? i, rf: p.rf ?? p.predicted ?? p.retention, baseline: p.baseline ?? p.ebbinghaus ?? p.retention }));
+    if (Array.isArray(fromApi) && fromApi.length && active) {
+      return fromApi.map((p, i) => {
+        const day = p.day ?? i;
+        const rfRaw = p.rf ?? p.predicted ?? p.retention;
+        const rfVal = typeof rfRaw === 'number' && rfRaw <= 1 ? +(rfRaw * 100).toFixed(1) : +Number(rfRaw || 0).toFixed(1);
+        const baseRaw = p.baseline ?? p.ebbinghaus;
+        const baseVal = baseRaw != null
+          ? (typeof baseRaw === 'number' && baseRaw <= 1 ? +(baseRaw * 100).toFixed(1) : +Number(baseRaw).toFixed(1))
+          : +(baselineRetention(active.strength, active.elapsed_days + day) * 100).toFixed(1);
+
+        return { day, rf: rfVal, baseline: baseVal };
+      });
+    }
     return active ? buildCurve(active.strength, active.elapsed_days, { accuracy: active.accuracy, difficulty: DIFFICULTY_SCORE[active.difficulty] || 2 }) : [];
   }, [prediction.data, active]);
 
-  if (loading && !data) return <Spinner label="Building your command center" />;
+  if (!learner || (loading && !data)) return <Spinner label="Building your command center" />;
   if (error && !data) return <ErrorState error={error} onRetry={reload} />;
 
-  const { weak, queue, analytics } = data;
+  const weak = data?.weak || [];
+  const queue = data?.queue || [];
+  const analytics = data?.analytics || {};
   const critical = weak.filter((c) => c.health === 'CRITICAL');
   const avgRetention = concepts.length ? concepts.reduce((a, c) => a + c.retention, 0) / concepts.length : 0;
   const target = profile?.daily_target || 10;

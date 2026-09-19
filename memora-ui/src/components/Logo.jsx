@@ -14,7 +14,7 @@ export default function Logo({ className = '' }) {
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <LogoMark />
       <span className="text-lg font-extrabold tracking-tight text-obsidian">
-        Memora <span className="ml-0.5 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-600">2.0</span>
+        Memora
       </span>
     </span>
   );
