@@ -6,6 +6,7 @@ load_dotenv()
 
 class Config:
     PORT = int(os.getenv("PORT", 5000))
+    DEBUG = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     STORAGE_BACKEND = os.getenv("STORAGE_BACKEND", "json")  # "json" or "mongo"
 
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")

@@ -1,159 +1,149 @@
-# MEMORA Backend
+# MEMORA — Cognitive Learning Retention Intelligence System
 
-Flask REST API + ML layer for **MEMORA: Cognitive Learning Retention Intelligence
-System**. Implements the architecture from the Review-II deck: a cognitive model
-(Ebbinghaus forgetting curve) combined with a RandomForestRegressor that predicts
-concept retention, weak-concept detection, and a personalized revision scheduler.
+![CI](https://github.com/hariharan112277-sudo/MEMORA/actions/workflows/ci.yml/badge.svg)
+![Python 3.10 | 3.11 | 3.12 | 3.13](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-## Quick start
+MEMORA is an intelligent cognitive learning retention system built for CS5403 Machine Learning PBL. It fuses the mathematical **Ebbinghaus Forgetting Curve** $R(t) = e^{-t/S}$ with a **RandomForestRegressor** machine learning model to predict student memory retention, flag weak concepts, deliver server-side graded quizzes, and generate adaptive revision schedules.
+
+```mermaid
+graph TD
+    Client[Single-Page Dashboard / Vanilla JS] -->|HTTP REST| API[Flask API Blueprints]
+    API --> Store[Persistence Layer / store.py]
+    API --> ML[ML Engine / predictor.py]
+    Store -->|Default| JSON[(storage/db.json)]
+    Store -->|Optional| Mongo[(MongoDB)]
+    ML --> RF[RandomForestRegressor]
+    ML --> Ebb[Ebbinghaus Closed-Form Model]
+```
+
+---
+
+## Quick Start
+
+Execute these commands from the repository root:
 
 ```bash
-cd memora-backend
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+# 1. Clone & setup environment
+git clone https://github.com/hariharan112277-sudo/MEMORA.git
+cd MEMORA
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-cp .env.example .env            # defaults work with no editing
+# 2. Install dependencies
+pip install -r requirements.txt -r requirements-dev.txt
 
-# 1. Generate the synthetic training dataset (5,200 samples)
-python data/generate_dataset.py
+# 3. Generate dataset v2 & train ML model
+python data/generate_dataset.py   # Wrote 5,200 rows
+python ml/train_model.py          # Saves model + metrics.json
 
-# 2. Train the retention-prediction model
-python ml/train_model.py
-
-# 3. Run the API
+# 4. Start the server
 python app.py
 ```
 
-The API is now live at `http://localhost:5000`. No database setup required —
-learner/concept state is stored in `storage/db.json`, seeded automatically on
-first run with the same two demo learners used in the frontend prototype
-(`S R Hariharan`, `Aghilan M`).
+Then visit **`http://localhost:5000/dashboard`** in your browser to access the single-page dashboard.
 
-Run the test suite:
-
+Run post-installation verification:
 ```bash
-pytest
+bash scripts/verify.sh
 ```
 
-## Project layout
+---
 
-```
-memora-backend/
-├── app.py                  Flask app + blueprint registration
-├── config.py                Environment-driven configuration
-├── requirements.txt
-├── Dockerfile
-├── Procfile                 For Render/Heroku-style deploys
-├── ml/
-│   ├── ebbinghaus.py         Core cognitive model: R(t) = e^(-t/S), scheduling math
-│   ├── train_model.py        Trains the RandomForestRegressor
-│   └── predictor.py          Loads the model; falls back to pure Ebbinghaus if untrained
-├── data/
-│   ├── generate_dataset.py   Builds the synthetic 5,200-row training dataset
-│   └── dataset.csv           (generated)
-├── storage/
-│   └── store.py              JSON-file persistence by default; optional MongoDB
-├── routes/
-│   ├── health.py
-│   ├── retention.py          POST /api/retention/predict
-│   ├── concepts.py           GET  /api/concepts, /api/concepts/weak
-│   ├── schedule.py           POST /api/schedule/generate
-│   ├── quiz.py                POST /api/quiz/submit
-│   └── misc.py                /api/learners, /api/day/advance, /api/reset
-└── tests/
-    └── test_api.py
-```
+## Dashboard Features
 
-## API reference
+- **KPI Cards**: Overall learner retention %, count of Stable ($\ge 75\%$), Weak ($50-75\%$), and Critical ($< 50\%$) concepts.
+- **Tracked Concepts List**: Color-coded retention progress bars, days since review, memory strength $S$, and quick revision triggers.
+- **Priority Weak Panel**: Filtered list of concepts needing immediate attention sorted worst-first.
+- **Revision Schedule**: Overdue items highlighted in red with exact overdue days, followed by upcoming due items.
+- **Interactive Quiz Engine**: 100-question bank across 10 undergraduate CS concepts with per-question timers and immediate server-side feedback.
+- **Retention Curve & Trend Charts**: Interactive Chart.js visualizations showing predicted decay curves against an 80% threshold line and historical daily retention trends.
+- **Day Simulator**: Advance time by 1 day or custom $N$ days to observe simulated memory decay across all concepts.
 
-### `GET /api/health`
-Service status and whether the trained ML model is loaded.
+---
 
-### `GET /api/learners`
-Lists demo learners.
+## How the Model Works
 
-### `GET /api/concepts?learner_id=L_HARIHARAN`
-All concepts for a learner with live-computed retention and status.
+### 1. Mathematical Foundation (Ebbinghaus Decay)
+Retention probability $R(t)$ decays exponentially over time $t$ (days since last review) according to memory strength $S$:
+$$R(t) = e^{-\frac{t}{S}}$$
 
-### `GET /api/concepts/weak?learner_id=L_HARIHARAN`
-Only concepts flagged `weak` or `critical`, sorted by lowest retention first.
+- **Success**: Correct quiz response increases strength: $S_{\text{new}} = S_{\text{old}} \times (1.4 + 0.4 \times (1 - \text{difficulty}))$.
+- **Failure**: Incorrect response reduces strength: $S_{\text{new}} = \max(1.0, S_{\text{old}} \times 0.55)$.
 
-### `POST /api/retention/predict`
-Two modes:
+### 2. Machine Learning Fusion (Random Forest)
+A `RandomForestRegressor` trained on 5,200 simulated learner attempts predicts real-world retention using 5 features:
+1. `days_since_last_review`
+2. `quiz_accuracy` (rolling mean over last 10 attempts)
+3. `response_time` (average seconds per question)
+4. `attempt_count` (total revisions)
+5. `difficulty` (0.0 to 1.0)
 
-```jsonc
-// Mode A — by stored learner/concept
-{ "learner_id": "L_HARIHARAN", "concept_id": "data_structures" }
+### 3. Feature Importances (Dataset v2)
+In Dataset v2, label leakage was mitigated by decoupling true memory retention from observed quiz metrics.
 
-// Mode B — raw features, exercises the ML model directly
-{ "difficulty": 0.5, "days_since_last_review": 6, "quiz_accuracy": 0.7,
-  "response_time": 12.0, "attempt_count": 2 }
-```
+| Feature | Importance | Description |
+| :--- | :--- | :--- |
+| `days_since_last_review` | **0.9317** | Time elapsed since concept was last revised |
+| `quiz_accuracy` | **0.0411** | Rolling accuracy over recent attempts |
+| `difficulty` | **0.0172** | Subjective domain difficulty |
+| `response_time` | **0.0079** | Average recall latency |
+| `attempt_count` | **0.0021** | Total practice repetitions |
 
-Mode A returns both the closed-form Ebbinghaus retention and the ML model's
-prediction side by side, plus a curve for charting.
+Metrics log: `models/metrics.json` ($R^2 = 0.9158$, $\text{MAE} = 0.0571$).
 
-### `POST /api/schedule/generate`
-```json
-{ "learner_id": "L_HARIHARAN", "threshold": 0.8 }
-```
-Returns each concept's next-due day, soonest first — the same logic behind
-the "Personalized Revision Schedule" panel in the frontend.
+---
 
-### `POST /api/quiz/submit`
-```json
-{ "learner_id": "L_HARIHARAN", "concept_id": "data_structures", "correct": true }
-```
-Updates the concept's memory strength (grows on a correct answer, shrinks on
-a wrong one) and records the review day.
+## Complete API Surface
 
-### `POST /api/day/advance`
-```json
-{ "by": 1 }
-```
-Advances the simulation clock — mirrors the "Advance +1 Day" button in the
-frontend prototype.
+| Method | Endpoint | Description | Sample Request Payload | Sample Response Signature |
+| :--- | :--- | :--- | :--- | :--- |
+| **GET** | `/dashboard` | Single-page UI dashboard | None | `HTML Document` |
+| **GET** | `/api/health` | Service health status | None | `{"status":"ok","ml_model_loaded":true}` |
+| **GET** | `/api/learners` | List all learners | None | `{"learners":[{"learner_id":"L_HARIHARAN",...}]}` |
+| **POST** | `/api/learners` | Create new learner | `{"name":"Priya Sharma"}` | `{"learner_id":"L_PRIYA_SHARMA",...}` (201) |
+| **GET** | `/api/learners/<id>` | Full learner profile | None | `{"learner_id":"...","concepts":[...]}` |
+| **DELETE** | `/api/learners/<id>` | Delete learner | None | `204 No Content` |
+| **POST** | `/api/learners/<id>/concepts` | Add concept | `{"name":"Graph Theory","difficulty":0.5}` | `{"concept_id":"graph_theory",...}` (201) |
+| **DELETE** | `/api/learners/<id>/concepts/<cid>` | Delete concept | None | `204 No Content` |
+| **GET** | `/api/concepts?learner_id=` | List learner concepts | Query: `?learner_id=L_HARIHARAN` | `{"current_day":0,"concepts":[...]}` |
+| **GET** | `/api/concepts/weak?learner_id=` | List weak concepts | Query: `?learner_id=L_HARIHARAN` | `{"weak_concepts":[...]}` |
+| **GET** | `/api/analytics?learner_id=` | Dashboard KPIs & trend | Query: `?learner_id=L_HARIHARAN` | `{"overall_retention":0.62,"trend":[...]}` |
+| **POST** | `/api/retention/predict` | Predict retention & curve | `{"learner_id":"L_HARIHARAN","concept_id":"data_structures"}` | `{"retention_formula":0.8,"retention_ml":0.81,...}` |
+| **POST** | `/api/schedule/generate` | Overdue-aware schedule | `{"learner_id":"L_HARIHARAN","threshold":0.8}` | `{"overdue_count":2,"schedule":[...]}` |
+| **GET** | `/api/quiz/questions` | Bank questions (no leak) | Query: `?learner_id=...&concept_id=...&limit=5` | `{"questions":[{"id":"ds_q01","text":"...",...}]}` |
+| **POST** | `/api/quiz/attempt` | Server-side graded attempt | `{"learner_id":"...","concept_id":"...","question_id":"ds_q01","selected_option":1}` | `{"correct":true,"new_strength":13.3,...}` |
+| **POST** | `/api/quiz/submit` | Fallback quiz submission | `{"learner_id":"...","concept_id":"...","correct":true}` | `{"new_strength":13.3,"review_count":1,...}` |
+| **POST** | `/api/day/advance` | Advance simulator time | `{"by": 1}` | `{"current_day": 1}` |
+| **POST** | `/api/reset` | Reset state to seed data | None | `{"status":"reset complete","current_day":0}` |
 
-### `POST /api/reset`
-Resets all learner/concept state back to the seed demo data.
+---
 
-## Connecting the frontend prototype
+## Deployment & Production Notes
 
-The `memora-frontend.html` dashboard currently runs its Ebbinghaus/scheduling
-logic client-side, using the exact same formulas as this backend. To wire it
-up to this API instead:
+### Docker
 
-1. Run this backend (`python app.py`), note the base URL (default
-   `http://localhost:5000`).
-2. In the frontend's `<script>`, replace the local `retention()`,
-   `daysUntilThreshold()`, and `answerQuiz()` calls with `fetch()` calls to
-   `/api/retention/predict`, `/api/schedule/generate`, and
-   `/api/quiz/submit` respectively, using the same `learner_id`/`concept_id`
-   values already in the `bank` object (`L_HARIHARAN`/`data_structures`, etc.
-   — adjust IDs to match, they're listed in `storage/store.py`).
-3. Set `CORS_ORIGIN` in `.env` to the origin the frontend is served from
-   (or leave as `*` for local development).
-
-## Switching to MongoDB
-
-By default state is stored in `storage/db.json`. To use MongoDB instead:
-
+Build and run using Docker:
 ```bash
-# .env
-STORAGE_BACKEND=mongo
+docker build -t memora-backend .
+docker run -p 5000:5000 memora-backend
+```
+
+### Environment Configuration
+
+Configure variables via `.env`:
+```ini
+PORT=5000
+DEBUG=false
+STORAGE_BACKEND=json # "json" or "mongo"
 MONGO_URI=mongodb://localhost:27017
 MONGO_DB=memora
+RETENTION_THRESHOLD=0.8
+CORS_ORIGIN=*
 ```
 
-No code changes needed — `storage/store.py` exposes the same functions
-regardless of backend.
+---
 
-## Retraining with a larger / real dataset
+## License
 
-Replace `data/dataset.csv` with real learner-interaction data using the same
-columns (`difficulty, days_since_last_review, quiz_accuracy, response_time,
-attempt_count, retention_label`), then re-run `python ml/train_model.py`.
-The script prints MAE and R² on a held-out test split so you can track
-whether the swap improved prediction quality — useful evidence for the
-"Model Optimization" item on the Current Challenges & Future Direction slide.
+MIT License. Copyright (c) 2026 S R Hariharan.
