@@ -1,0 +1,822 @@
+{
+  "data_structures": [
+    {
+      "id": "ds_q01",
+      "text": "What is the worst-case time complexity of searching a balanced binary search tree?",
+      "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+      "correct": 1,
+      "explanation": "A balanced BST has height ⌈log n⌉, so search touches at most O(log n) nodes.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "ds_q02",
+      "text": "Which data structure operates on a First-In, First-Out (FIFO) basis?",
+      "options": ["Stack", "Queue", "Tree", "Graph"],
+      "correct": 1,
+      "explanation": "Queues process elements in FIFO order.",
+      "difficulty": 0.2
+    },
+    {
+      "id": "ds_q03",
+      "text": "What is the average time complexity for insertion in a hash table with good hashing?",
+      "options": ["O(1)", "O(log n)", "O(n)", "O(n^2)"],
+      "correct": 0,
+      "explanation": "Hash tables offer average O(1) time complexity for insertion.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "ds_q04",
+      "text": "Which traversal of a Binary Search Tree produces elements in sorted order?",
+      "options": ["Pre-order", "In-order", "Post-order", "Level-order"],
+      "correct": 1,
+      "explanation": "In-order traversal visits left subtree, root, then right subtree, yielding sorted keys.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "ds_q05",
+      "text": "What is the worst-case space complexity of a Depth-First Search (DFS) on a graph with V vertices?",
+      "options": ["O(1)", "O(V)", "O(V^2)", "O(E)"],
+      "correct": 1,
+      "explanation": "The call stack in DFS can store up to V vertices in the worst case path.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "ds_q06",
+      "text": "In a max-heap of size n, what is the time complexity of extracting the maximum element?",
+      "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+      "correct": 1,
+      "explanation": "Removing the root and heapifying down takes O(log n) time.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "ds_q07",
+      "text": "Which memory allocation structure uses LIFO order for function call stack frames?",
+      "options": ["Heap", "Stack", "B-Tree", "Trie"],
+      "correct": 1,
+      "explanation": "Call stack frames are pushed and popped in Last-In First-Out order.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "ds_q08",
+      "text": "What data structure is ideal for implementing prefix matching in autocomplete search?",
+      "options": ["Trie", "Red-Black Tree", "Hash Map", "Priority Queue"],
+      "correct": 0,
+      "explanation": "A Trie (prefix tree) stores string keys node by character, making prefix queries efficient.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "ds_q09",
+      "text": "How many pointers does each node contain in a doubly linked list?",
+      "options": ["0", "1", "2", "3"],
+      "correct": 2,
+      "explanation": "Each node in a doubly linked list stores pointers to both next and previous nodes.",
+      "difficulty": 0.2
+    },
+    {
+      "id": "ds_q10",
+      "text": "What is the maximum balance factor allowed for any node in an AVL tree?",
+      "options": ["0", "1", "2", "Unlimited"],
+      "correct": 1,
+      "explanation": "AVL trees require height difference between subtrees to be at most -1, 0, or +1.",
+      "difficulty": 0.5
+    }
+  ],
+  "operating_systems": [
+    {
+      "id": "os_q01",
+      "text": "Which process scheduling algorithm can cause starvation for low-priority processes?",
+      "options": ["Round Robin", "Priority Scheduling", "FCFS", "Shortest Remaining Time First"],
+      "correct": 1,
+      "explanation": "Priority scheduling can starve lower-priority processes indefinitely unless aging is used.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "os_q02",
+      "text": "What state transition occurs when a process receives a hardware interrupt?",
+      "options": ["Running to Ready", "Ready to Running", "Running to Terminated", "Waiting to Terminated"],
+      "correct": 0,
+      "explanation": "An interrupt preempts the running process, placing it back in the ready queue.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "os_q03",
+      "text": "Which of the following is NOT a necessary condition for a deadlock?",
+      "options": ["Mutual Exclusion", "Hold and Wait", "Preemption allowed", "Circular Wait"],
+      "correct": 2,
+      "explanation": "No Preemption is a required Coffman condition; allowing preemption prevents deadlock.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "os_q04",
+      "text": "What is thrashing in virtual memory management?",
+      "options": ["High CPU utilization", "Excessive page faulting causing low CPU throughput", "Buffer overflow", "Disk defragmentation"],
+      "correct": 1,
+      "explanation": "Thrashing occurs when the system spends more time swapping pages than executing instructions.",
+      "difficulty": 0.6
+    },
+    {
+      "id": "os_q05",
+      "text": "What synchronization primitive uses atomic wait() and signal() operations?",
+      "options": ["Mutex", "Semaphore", "Spinlock", "Barrier"],
+      "correct": 1,
+      "explanation": "Semaphores use wait (P) and signal (V) integer operations for access control.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "os_q06",
+      "text": "Which memory allocation algorithm suffers from external fragmentation?",
+      "options": ["Paging", "Segmentation", "Fixed partitioning", "Virtual Memory"],
+      "correct": 1,
+      "explanation": "Segmentation uses variable-sized segments leading to external fragmentation.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "os_q07",
+      "text": "What is the purpose of the Translation Lookaside Buffer (TLB)?",
+      "options": ["CPU cache for code", "Fast hardware cache for page table translations", "Disk cache", "Interrupt table"],
+      "correct": 1,
+      "explanation": "The TLB caches recent virtual-to-physical address translations for fast access.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "os_q08",
+      "text": "In Unix system calls, what does fork() return in the parent process?",
+      "options": ["0", "The PID of the newly created child process", "-1 always", "Parent PID"],
+      "correct": 1,
+      "explanation": "fork() returns 0 to the child and the child's PID to the parent process.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "os_q09",
+      "text": "Which page replacement algorithm suffers from Belady's Anomaly?",
+      "options": ["LRU", "FIFO", "Optimal", "LFU"],
+      "correct": 1,
+      "explanation": "FIFO page replacement can exhibit more page faults when allocated more frame slots.",
+      "difficulty": 0.6
+    },
+    {
+      "id": "os_q10",
+      "text": "What is a Kernel thread compared to a User thread?",
+      "options": ["Managed by OS kernel", "Managed without kernel awareness", "Slower to switch than processes", "Runs only in user mode"],
+      "correct": 0,
+      "explanation": "Kernel threads are directly scheduled and managed by the operating system kernel.",
+      "difficulty": 0.4
+    }
+  ],
+  "dbms_normalization": [
+    {
+      "id": "db_q01",
+      "text": "A relation is in First Normal Form (1NF) if:",
+      "options": ["It has no partial dependencies", "All column values are atomic", "It has no transitive dependencies", "Every determinant is a candidate key"],
+      "correct": 1,
+      "explanation": "1NF requires scalar/atomic attributes without repeating groups.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "db_q02",
+      "text": "What dependency does Second Normal Form (2NF) eliminate?",
+      "options": ["Transitive dependencies", "Partial functional dependencies on composite candidate keys", "Multivalued dependencies", "Join dependencies"],
+      "correct": 1,
+      "explanation": "2NF requires 1NF and no non-prime attribute depending on a proper subset of any candidate key.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "db_q03",
+      "text": "To satisfy Third Normal Form (3NF), a relation must be in 2NF and have no:",
+      "options": ["Atomic attributes", "Transitive dependencies of non-prime attributes on candidate keys", "Primary keys", "Foreign keys"],
+      "correct": 1,
+      "explanation": "3NF removes transitive functional dependencies of non-prime attributes.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "db_q04",
+      "text": "What condition distinguishes Boyce-Codd Normal Form (BCNF) from 3NF?",
+      "options": ["For X -> Y, X must be a superkey", "All attributes must be strings", "No foreign keys allowed", "Primary keys must be composite"],
+      "correct": 0,
+      "explanation": "BCNF requires that for every non-trivial functional dependency X -> Y, X must be a superkey.",
+      "difficulty": 0.6
+    },
+    {
+      "id": "db_q05",
+      "text": "Which normal form deals specifically with Multivalued Dependencies (MVDs)?",
+      "options": ["2NF", "3NF", "4NF", "5NF"],
+      "correct": 2,
+      "explanation": "4NF eliminates non-trivial multivalued dependencies.",
+      "difficulty": 0.6
+    },
+    {
+      "id": "db_q06",
+      "text": "What anomaly occurs when removing a tuple unintentionally deletes other crucial data?",
+      "options": ["Insertion Anomaly", "Deletion Anomaly", "Update Anomaly", "Read Anomaly"],
+      "correct": 1,
+      "explanation": "Deletion anomalies occur when deleting data causes loss of unrelated facts stored in the same row.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "db_q07",
+      "text": "Which operation guarantees that a decomposed schema can reconstruct the original table exactly?",
+      "options": ["Lossless-Join Decomposition", "Dependency Preservation", "Denormalization", "Outer Join"],
+      "correct": 0,
+      "explanation": "Lossless-join property ensures natural join of decomposed relations yields original relation.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "db_q08",
+      "text": "What is a candidate key in relational databases?",
+      "options": ["A key that is chosen as primary key", "A minimal superkey capable of uniquely identifying a tuple", "Any index column", "A non-null key"],
+      "correct": 1,
+      "explanation": "A candidate key is a minimal set of attributes that uniquely identifies tuples in a relation.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "db_q09",
+      "text": "What is Fifth Normal Form (5NF) also known as?",
+      "options": ["Project-Join Normal Form (PJNF)", "Domain-Key Normal Form", "BCNF", "1NF"],
+      "correct": 0,
+      "explanation": "5NF is also known as Project-Join Normal Form (PJNF) and addresses join dependencies.",
+      "difficulty": 0.7
+    },
+    {
+      "id": "db_q10",
+      "text": "Why might a database designer intentionally denormalize a schema?",
+      "options": ["To eliminate duplicate data", "To improve read performance by avoiding expensive joins", "To enforce BCNF", "To reduce storage space"],
+      "correct": 1,
+      "explanation": "Denormalization trades redundancy for faster query execution by reducing table joins.",
+      "difficulty": 0.4
+    }
+  ],
+  "ml_fundamentals": [
+    {
+      "id": "ml_q01",
+      "text": "Which machine learning approach uses labeled training datasets?",
+      "options": ["Unsupervised Learning", "Supervised Learning", "Reinforcement Learning", "Clustering"],
+      "correct": 1,
+      "explanation": "Supervised learning uses pairs of input features and ground-truth target labels.",
+      "difficulty": 0.2
+    },
+    {
+      "id": "ml_q02",
+      "text": "What phenomenon occurs when a model performs exceptionally well on training data but poorly on unseen test data?",
+      "options": ["Underfitting", "Overfitting", "Convergence", "Regularization"],
+      "correct": 1,
+      "explanation": "Overfitting happens when a model learns noise in training data instead of general patterns.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "ml_q03",
+      "text": "Which metric measures the proportion of true positives among all predicted positive instances?",
+      "options": ["Recall", "Precision", "F1-score", "Accuracy"],
+      "correct": 1,
+      "explanation": "Precision = TP / (TP + FP).",
+      "difficulty": 0.4
+    },
+    {
+      "id": "ml_q04",
+      "text": "What is the primary purpose of K-Fold Cross Validation?",
+      "options": ["To speed up model inference", "To obtain a robust estimate of model generalization performance", "To scale features", "To prevent gradient descent"],
+      "correct": 1,
+      "explanation": "K-Fold cross validation evaluates model stability across K distinct test splits.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "ml_q05",
+      "text": "What does L1 Regularization (Lasso) encourage in model coefficients?",
+      "options": ["Sparsity (setting redundant weights strictly to 0)", "Uniform small weights", "Polynomial expansion", "Infinitely large weights"],
+      "correct": 0,
+      "explanation": "L1 penalty adds sum of absolute weights, driving uninformative weights exactly to zero.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "ml_q06",
+      "text": "Which algorithm is a non-parametric unsupervised clustering method?",
+      "options": ["Linear Regression", "K-Means", "Logistic Regression", "Random Forest"],
+      "correct": 1,
+      "explanation": "K-Means partitions dataset samples into K cluster centroids without labels.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "ml_q07",
+      "text": "What tradeoff describes balancing model flexibility against sensitivity to small fluctuations in training data?",
+      "options": ["Bias-Variance Tradeoff", "Precision-Recall Curve", "ROC-AUC Tradeoff", "Overfitting-Underfitting Axiom"],
+      "correct": 0,
+      "explanation": "High bias leads to underfitting; high variance leads to overfitting.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "ml_q08",
+      "text": "What metric is computed as the harmonic mean of precision and recall?",
+      "options": ["Accuracy", "F1-Score", "ROC-AUC", "MAE"],
+      "correct": 1,
+      "explanation": "F1-Score = 2 * (Precision * Recall) / (Precision + Recall).",
+      "difficulty": 0.3
+    },
+    {
+      "id": "ml_q09",
+      "text": "What loss function is standard for binary classification models with probability output?",
+      "options": ["Mean Squared Error (MSE)", "Binary Cross-Entropy (Log Loss)", "Hinge Loss", "Mean Absolute Error"],
+      "correct": 1,
+      "explanation": "Binary cross-entropy measures disagreement between predicted probability distribution and true binary target.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "ml_q10",
+      "text": "In a Random Forest Regressor, how are individual decision tree predictions combined?",
+      "options": ["Majority vote", "Averaging the predictions", "Weighted product", "Selecting the maximum"],
+      "correct": 1,
+      "explanation": "Regression ensembles average output predictions of individual base estimators.",
+      "difficulty": 0.4
+    }
+  ],
+  "computer_networks": [
+    {
+      "id": "cn_q01",
+      "text": "Which layer of the OSI model handles end-to-end communication reliability and flow control?",
+      "options": ["Network Layer", "Transport Layer", "Data Link Layer", "Session Layer"],
+      "correct": 1,
+      "explanation": "The Transport Layer (e.g. TCP) provides end-to-end reliability, sequence control, and flow management.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "cn_q02",
+      "text": "What protocol translates domain names like example.com into IP addresses?",
+      "options": ["DHCP", "DNS", "ARP", "ICMP"],
+      "correct": 1,
+      "explanation": "Domain Name System (DNS) resolves human-readable names to IP addresses.",
+      "difficulty": 0.2
+    },
+    {
+      "id": "cn_q03",
+      "text": "What mechanism does TCP use for flow control to prevent receiver buffer overflow?",
+      "options": ["Sliding Window Protocol", "Congestion Window Expansion", "Token Ring", "Exponential Backoff"],
+      "correct": 0,
+      "explanation": "TCP sliding window adjusts sender transmission rate based on advertised receiver window size.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "cn_q04",
+      "text": "Which protocol resolves IP addresses to physical MAC addresses on a local subnet?",
+      "options": ["RARP", "ARP", "NAT", "BGP"],
+      "correct": 1,
+      "explanation": "Address Resolution Protocol (ARP) maps IPv4 network addresses to Ethernet MAC addresses.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "cn_q05",
+      "text": "What is the subnet mask for a CIDR /24 network?",
+      "options": ["255.255.0.0", "255.255.255.0", "255.255.255.128", "255.0.0.0"],
+      "correct": 1,
+      "explanation": "/24 CIDR prefix corresponds to 24 bits set: 255.255.255.0.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "cn_q06",
+      "text": "Which routing algorithm is based on Dijkstra's shortest path computation?",
+      "options": ["Distance Vector Routing", "Link State Routing (e.g. OSPF)", "Path Vector Routing", "Flooding"],
+      "correct": 1,
+      "explanation": "Link-state protocols like OSPF use Dijkstra's algorithm to compute shortest paths.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "cn_q07",
+      "text": "What is the standard port number for HTTPS traffic?",
+      "options": ["80", "443", "8080", "22"],
+      "correct": 1,
+      "explanation": "Port 443 is the well-known port reserved for HTTP over TLS/SSL (HTTPS).",
+      "difficulty": 0.2
+    },
+    {
+      "id": "cn_q08",
+      "text": "What feature distinguishes UDP from TCP?",
+      "options": ["Connectionless and lightweight without guarantees", "Connection-oriented with retransmission", "Byte-stream communication", "Flow controlled"],
+      "correct": 0,
+      "explanation": "UDP is connectionless, offering low overhead without guarantee of delivery or ordering.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "cn_q09",
+      "text": "What technique allows multiple private IP addresses to share a single public IP address?",
+      "options": ["DHCP", "NAT (Network Address Translation)", "VLAN", "IPsec"],
+      "correct": 1,
+      "explanation": "NAT rewrites source/destination IP/port headers to map private space to public IP.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "cn_q10",
+      "text": "What three-way handshake sequence establishes a TCP connection?",
+      "options": ["FIN, FIN-ACK, ACK", "SYN, SYN-ACK, ACK", "RST, SYN, ACK", "PING, PONG, ACK"],
+      "correct": 1,
+      "explanation": "TCP establishment consists of client SYN, server SYN-ACK, and client ACK.",
+      "difficulty": 0.3
+    }
+  ],
+  "oop_concepts": [
+    {
+      "id": "oop_q01",
+      "text": "Which OOP principle hides implementation details and exposes only an essential public interface?",
+      "options": ["Polymorphism", "Encapsulation", "Inheritance", "Instantiation"],
+      "correct": 1,
+      "explanation": "Encapsulation bundles data with methods and restricts direct internal access.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "oop_q02",
+      "text": "What OOP feature allows a subclass to provide a specific implementation of a method defined in its superclass?",
+      "options": ["Method Overloading", "Method Overriding", "Abstraction", "Composition"],
+      "correct": 1,
+      "explanation": "Method overriding allows a derived class to replace superclass behavior dynamically.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "oop_q03",
+      "text": "What design guideline favors combining simpler objects over inheriting from a base class?",
+      "options": ["Inheritance over Composition", "Favor Composition over Inheritance", "Single Responsibility", "Open-Closed Principle"],
+      "correct": 1,
+      "explanation": "Composition promotes flexibility and avoids tight coupling of deep class hierarchies.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "oop_q04",
+      "text": "What is an abstract class?",
+      "options": ["A class that cannot be instantiated and may contain abstract methods", "A class with no methods", "A final class", "A class that implements all interfaces"],
+      "correct": 0,
+      "explanation": "Abstract classes define common templates and signatures for subclasses without direct instantiation.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "oop_q05",
+      "text": "What does the 'S' stand for in SOLID design principles?",
+      "options": ["Subclass Substitution", "Single Responsibility Principle", "Static Dispatch", "Structural Polymorphism"],
+      "correct": 1,
+      "explanation": "Single Responsibility Principle dictates a class should have one reason to change.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "oop_q06",
+      "text": "What type of polymorphism occurs at compile time via method signature overloading?",
+      "options": ["Dynamic Polymorphism", "Static Polymorphism", "Duck Typing", "Subtyping"],
+      "correct": 1,
+      "explanation": "Compile-time (static) polymorphism resolves overloaded method calls based on argument signatures.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "oop_q07",
+      "text": "Which keyword prevents a class from being subclassed in Java/C#?",
+      "options": ["static", "final / sealed", "abstract", "virtual"],
+      "correct": 1,
+      "explanation": "final (Java) or sealed (C#) prevents inheritance derived subclasses.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "oop_q08",
+      "text": "What pattern decouples object construction from its representation?",
+      "options": ["Builder Pattern", "Observer Pattern", "Strategy Pattern", "Adapter Pattern"],
+      "correct": 0,
+      "explanation": "Builder pattern constructs complex objects step by step.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "oop_q09",
+      "text": "What is the Diamond Problem in object-oriented programming?",
+      "options": ["Memory leak in heap", "Ambiguity in multiple inheritance when a class inherits from two classes with a common ancestor", "Infinite recursion", "Deadlock in objects"],
+      "correct": 1,
+      "explanation": "Diamond problem occurs under multiple inheritance when parent classes share a base class method.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "oop_q10",
+      "text": "In OOP, what is a destructor or finalizer used for?",
+      "options": ["Allocating memory", "Releasing unmanaged resources when an object is destroyed", "Compiling code", "Instantiating objects"],
+      "correct": 1,
+      "explanation": "Destructors clean up resources like file handles or sockets before object memory is reclaimed.",
+      "difficulty": 0.3
+    }
+  ],
+  "algorithm_design": [
+    {
+      "id": "alg_q01",
+      "text": "What algorithmic strategy does Merge Sort utilize?",
+      "options": ["Greedy Choice", "Divide and Conquer", "Dynamic Programming", "Backtracking"],
+      "correct": 1,
+      "explanation": "Merge sort divides the array into sub-arrays, recursively sorts them, and merges results.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "alg_q02",
+      "text": "What is the worst-case time complexity of Quick Sort with poor pivot selection?",
+      "options": ["O(n)", "O(n log n)", "O(n^2)", "O(2^n)"],
+      "correct": 2,
+      "explanation": "Quick sort degrades to O(n^2) when the pivot continuously selects minimum/maximum elements.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "alg_q03",
+      "text": "Which algorithm computes single-source shortest paths in graphs with non-negative edge weights?",
+      "options": ["Bellman-Ford", "Dijkstra's Algorithm", "Floyd-Warshall", "Kruskal's Algorithm"],
+      "correct": 1,
+      "explanation": "Dijkstra's algorithm efficiently solves single-source shortest path problems with non-negative weights.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "alg_q04",
+      "text": "What strategy optimizes dynamic programming by storing results of subproblems?",
+      "options": ["Memoization / Tabulation", "Branch and Bound", "Randomization", "Heuristic Search"],
+      "correct": 0,
+      "explanation": "Dynamic programming stores subproblem solutions (memoization or bottom-up tabulation) to avoid recalculation.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "alg_q05",
+      "text": "What problem asks for the minimum spanning tree of a weighted undirected graph?",
+      "options": ["Shortest Path", "Kruskal's / Prim's problem", "Maximum Flow", "Traveling Salesperson"],
+      "correct": 1,
+      "explanation": "Kruskal's and Prim's algorithms find Minimum Spanning Trees (MST).",
+      "difficulty": 0.4
+    },
+    {
+      "id": "alg_q06",
+      "text": "What is the time complexity of searching an element using Binary Search on a sorted array of size n?",
+      "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+      "correct": 1,
+      "explanation": "Binary search halves the search space each step, achieving O(log n) time.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "alg_q07",
+      "text": "Which graph algorithm can handle negative edge weights for single-source shortest path?",
+      "options": ["Dijkstra", "Bellman-Ford", "BFS", "Kruskal"],
+      "correct": 1,
+      "explanation": "Bellman-Ford algorithm handles negative weights and detects negative weight cycles.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "alg_q08",
+      "text": "What algorithm design technique attempts locally optimal choices at each step?",
+      "options": ["Greedy Algorithm", "Dynamic Programming", "Divide and Conquer", "Backtracking"],
+      "correct": 0,
+      "explanation": "Greedy algorithms make top-down locally optimal decisions hoping to reach a global optimum.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "alg_q09",
+      "text": "What complexity class contains decision problems verifiable in polynomial time by a deterministic Turing machine?",
+      "options": ["P", "NP", "NP-Hard", "EXPTIME"],
+      "correct": 1,
+      "explanation": "NP (Nondeterministic Polynomial time) problems have solutions verifiable in polynomial time.",
+      "difficulty": 0.6
+    },
+    {
+      "id": "alg_q10",
+      "text": "What is the time complexity of Floyd-Warshall all-pairs shortest path algorithm on V vertices?",
+      "options": ["O(V)", "O(V log V)", "O(V^2)", "O(V^3)"],
+      "correct": 3,
+      "explanation": "Floyd-Warshall uses three nested loops over V vertices, yielding O(V^3) complexity.",
+      "difficulty": 0.5
+    }
+  ],
+  "probability_stats": [
+    {
+      "id": "ps_q01",
+      "text": "What is the probability of flipping two heads in a row with a fair coin?",
+      "options": ["0.50", "0.25", "0.75", "0.125"],
+      "correct": 1,
+      "explanation": "Independent events: 0.5 * 0.5 = 0.25.",
+      "difficulty": 0.2
+    },
+    {
+      "id": "ps_q02",
+      "text": "What statistical measure describes the middle value of a sorted dataset?",
+      "options": ["Mean", "Median", "Mode", "Variance"],
+      "correct": 1,
+      "explanation": "The median divides ordered data into equal upper and lower halves.",
+      "difficulty": 0.2
+    },
+    {
+      "id": "ps_q03",
+      "text": "According to the Central Limit Theorem, what distribution does the sample mean approach as sample size increases?",
+      "options": ["Uniform Distribution", "Normal (Gaussian) Distribution", "Exponential Distribution", "Binomial Distribution"],
+      "correct": 1,
+      "explanation": "Central Limit Theorem states sample means converge to a normal distribution for sufficiently large n.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "ps_q04",
+      "text": "What formula calculates conditional probability P(A|B)?",
+      "options": ["P(A) * P(B)", "P(A ∩ B) / P(B)", "P(A) + P(B)", "P(B|A) / P(A)"],
+      "correct": 1,
+      "explanation": "Conditional probability P(A|B) = P(A ∩ B) / P(B) for P(B) > 0.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "ps_q05",
+      "text": "What is the variance of a standard normal distribution?",
+      "options": ["0", "1", "2", "Infinity"],
+      "correct": 1,
+      "explanation": "A standard normal distribution ~ N(μ=0, σ^2=1) has mean 0 and variance 1.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "ps_q06",
+      "text": "In hypothesis testing, what is a Type I Error?",
+      "options": ["Rejecting a true null hypothesis (False Positive)", "Failing to reject a false null hypothesis (False Negative)", "Sample size error", "Measurement error"],
+      "correct": 0,
+      "explanation": "Type I error occurs when the null hypothesis is true but falsely rejected.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "ps_q07",
+      "text": "What theorem relates P(A|B) to P(B|A), P(A), and P(B)?",
+      "options": ["Bayes' Theorem", "Markov's Inequality", "Chebyshev's Inequality", "Law of Large Numbers"],
+      "correct": 0,
+      "explanation": "Bayes' Theorem: P(A|B) = P(B|A) * P(A) / P(B).",
+      "difficulty": 0.3
+    },
+    {
+      "id": "ps_q08",
+      "text": "What discrete probability distribution models the number of events in a fixed time interval?",
+      "options": ["Binomial Distribution", "Poisson Distribution", "Geometric Distribution", "Normal Distribution"],
+      "correct": 1,
+      "explanation": "Poisson distribution models event arrival counts occurring at a constant average rate.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "ps_q09",
+      "text": "What is the relationship between Variance Var(X) and Standard Deviation σ(X)?",
+      "options": ["Var(X) = σ(X)", "Var(X) = σ(X)^2", "Var(X) = sqrt(σ(X))", "Var(X) = 2 * σ(X)"],
+      "correct": 1,
+      "explanation": "Variance is the square of standard deviation.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "ps_q10",
+      "text": "What does a correlation coefficient r = -0.95 indicate?",
+      "options": ["Weak positive linear relationship", "Strong negative linear relationship", "No linear relationship", "Random relationship"],
+      "correct": 1,
+      "explanation": "Pearson r close to -1 indicates a strong inverse linear relationship.",
+      "difficulty": 0.3
+    }
+  ],
+  "neural_networks": [
+    {
+      "id": "nn_q01",
+      "text": "Which activation function outputs values constrained between 0 and 1?",
+      "options": ["ReLU", "Sigmoid", "Tanh", "Leaky ReLU"],
+      "correct": 1,
+      "explanation": "Sigmoid σ(z) = 1 / (1 + e^-z) maps inputs into range (0, 1).",
+      "difficulty": 0.3
+    },
+    {
+      "id": "nn_q02",
+      "text": "What algorithm computes gradients of loss with respect to neural network weights via the chain rule?",
+      "options": ["Forward Propagation", "Backpropagation", "Convolution", "Max Pooling"],
+      "correct": 1,
+      "explanation": "Backpropagation applies the chain rule backward from output to input to compute partial derivatives.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "nn_q03",
+      "text": "What problem plagues deep neural networks with Sigmoid activations during backpropagation?",
+      "options": ["Exploding Memory", "Vanishing Gradient Problem", "Underfitting", "Over-regularization"],
+      "correct": 1,
+      "explanation": "Sigmoid derivatives (< 0.25) cause gradients to shrink exponentially in early layers.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "nn_q04",
+      "text": "What is the output formula for Rectified Linear Unit (ReLU)?",
+      "options": ["f(x) = max(0, x)", "f(x) = 1 / (1 + e^-x)", "f(x) = tanh(x)", "f(x) = x^2"],
+      "correct": 0,
+      "explanation": "ReLU returns x if x > 0 else 0.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "nn_q05",
+      "text": "What regularization technique randomly deactivates neurons during training to prevent co-adaptation?",
+      "options": ["Batch Normalization", "Dropout", "Weight Decay", "Early Stopping"],
+      "correct": 1,
+      "explanation": "Dropout randomly sets a fraction p of node outputs to zero during training iterations.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "nn_q06",
+      "text": "Which neural network architecture is tailored for grid-like spatial data like images?",
+      "options": ["Recurrent Neural Network (RNN)", "Convolutional Neural Network (CNN)", "Transformer", "Autoencoder"],
+      "correct": 1,
+      "explanation": "CNNs use convolutional kernels to extract local spatial features from images.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "nn_q07",
+      "text": "What layer normalizes intermediate activations across mini-batches to stabilize neural network training?",
+      "options": ["Dropout Layer", "Batch Normalization Layer", "Dense Layer", "Softmax Layer"],
+      "correct": 1,
+      "explanation": "Batch Normalization standardizes mean and variance of layer inputs within each batch.",
+      "difficulty": 0.5
+    },
+    {
+      "id": "nn_q08",
+      "text": "What optimizer combines adaptive learning rates for each parameter with momentum?",
+      "options": ["SGD", "Adam", "AdaGrad", "RMSprop"],
+      "correct": 1,
+      "explanation": "Adam (Adaptive Moment Estimation) tracks exponentially decaying averages of past gradients and squared gradients.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "nn_q09",
+      "text": "What function converts raw logits into a multi-class probability distribution summing to 1?",
+      "options": ["Softmax", "Sigmoid", "ReLU", "Argmax"],
+      "correct": 0,
+      "explanation": "Softmax exponentiates and normalizes logits across classes into valid probabilities.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "nn_q10",
+      "text": "Which mechanism allows Transformer architectures to weigh the importance of different sequence tokens dynamically?",
+      "options": ["Recurrence", "Self-Attention Mechanism", "Pooling", "Stochastic Gradient Descent"],
+      "correct": 1,
+      "explanation": "Self-attention computes query-key similarity matrices to weight sequence token representations.",
+      "difficulty": 0.6
+    }
+  ],
+  "software_engineering": [
+    {
+      "id": "se_q01",
+      "text": "Which software development lifecycle model emphasizes iterative development in short sprints?",
+      "options": ["Waterfall", "Agile / Scrum", "V-Model", "Big Bang Model"],
+      "correct": 1,
+      "explanation": "Agile/Scrum delivers functional increments in short 1-4 week iterations called sprints.",
+      "difficulty": 0.2
+    },
+    {
+      "id": "se_q02",
+      "text": "What type of testing verifies individual units or modules of code in isolation?",
+      "options": ["Integration Testing", "Unit Testing", "System Testing", "Acceptance Testing"],
+      "correct": 1,
+      "explanation": "Unit testing checks individual functions/classes independently of external systems.",
+      "difficulty": 0.2
+    },
+    {
+      "id": "se_q03",
+      "text": "What does CI/CD stand for in DevOps practices?",
+      "options": ["Continuous Integration / Continuous Deployment", "Code Inspection / Code Delivery", "Centralized Interface / Centralized Database", "Component Isolation / Component Testing"],
+      "correct": 0,
+      "explanation": "CI/CD automates building, testing, and deploying software updates rapidly.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "se_q04",
+      "text": "What design pattern defines a one-to-many dependency between objects so that when one changes state, all dependents are notified?",
+      "options": ["Factory Pattern", "Observer Pattern", "Singleton Pattern", "Decorator Pattern"],
+      "correct": 1,
+      "explanation": "Observer pattern broadcasts state changes from a subject to registered observers.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "se_q05",
+      "text": "In Git version control, what command creates a new local branch?",
+      "options": ["git checkout -b <branch>", "git merge", "git commit", "git pull"],
+      "correct": 0,
+      "explanation": "git checkout -b <branch> (or git switch -c <branch>) creates and switches to a new branch.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "se_q06",
+      "text": "What architectural style structures an application as a collection of loosely coupled, independently deployable services?",
+      "options": ["Monolithic Architecture", "Microservices Architecture", "Layered Architecture", "Client-Server Architecture"],
+      "correct": 1,
+      "explanation": "Microservices decompose systems into fine-grained, autonomous services over lightweight APIs.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "se_q07",
+      "text": "What principle recommends writing tests before writing the corresponding production code?",
+      "options": ["Test-Driven Development (TDD)", "Behavior-Driven Development (BDD)", "Defensive Programming", "Refactoring"],
+      "correct": 0,
+      "explanation": "TDD follows Red-Green-Refactor: write failing test, write minimal code to pass, refactor.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "se_q08",
+      "text": "What term describes the implied cost of additional rework caused by choosing an easy solution now instead of a better approach?",
+      "options": ["Technical Debt", "Code Smells", "Refactoring Cost", "Overengineering"],
+      "correct": 0,
+      "explanation": "Technical debt reflects future refactoring effort required to fix expedient code choices.",
+      "difficulty": 0.3
+    },
+    {
+      "id": "se_q09",
+      "text": "What type of testing evaluates system performance under extreme workload conditions beyond normal operational limits?",
+      "options": ["Smoke Testing", "Stress Testing", "Usability Testing", "Regression Testing"],
+      "correct": 1,
+      "explanation": "Stress testing pushes system bounds to determine stability and failure modes under heavy load.",
+      "difficulty": 0.4
+    },
+    {
+      "id": "se_q10",
+      "text": "What design pattern ensures a class has only one instance while providing a global point of access to it?",
+      "options": ["Factory Method", "Singleton Pattern", "Prototype Pattern", "Proxy Pattern"],
+      "correct": 1,
+      "explanation": "Singleton pattern restricts instantiation of a class to a single global instance.",
+      "difficulty": 0.3
+    }
+  ]
+}

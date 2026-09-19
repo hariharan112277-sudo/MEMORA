@@ -182,3 +182,71 @@ def test_analytics_endpoint(client):
     assert "trend" in body
     assert len(body["per_concept"]) == 5
 
+
+def test_quiz_questions_no_leakage(client):
+    res = client.get("/api/quiz/questions?learner_id=L_HARIHARAN&concept_id=data_structures&limit=5")
+    assert res.status_code == 200
+    body = res.get_json()
+    assert len(body["questions"]) == 5
+    for q in body["questions"]:
+        assert "id" in q
+        assert "text" in q
+        assert "options" in q
+        assert "correct" not in q
+        assert "explanation" not in q
+
+
+def test_quiz_attempt_server_side_grading(client):
+    # Fetch questions to get valid question_id
+    q_res = client.get("/api/quiz/questions?learner_id=L_HARIHARAN&concept_id=data_structures&limit=1")
+    q = q_res.get_json()["questions"][0]
+    q_id = q["id"]
+
+    # Test wrong attempt
+    res_wrong = client.post("/api/quiz/attempt", json={
+        "learner_id": "L_HARIHARAN",
+        "concept_id": "data_structures",
+        "question_id": q_id,
+        "selected_option": 3 if q_id != "ds_q01" else 0,  # wrong option
+        "response_time": 15.0,
+    })
+    assert res_wrong.status_code == 200
+    body_w = res_wrong.get_json()
+    assert "correct" in body_w
+    assert "correct_option" in body_w
+    assert "explanation" in body_w
+
+    # Test correct attempt with ds_q01 (correct_option is 1)
+    res_correct = client.post("/api/quiz/attempt", json={
+        "learner_id": "L_HARIHARAN",
+        "concept_id": "data_structures",
+        "question_id": "ds_q01",
+        "selected_option": 1,
+        "response_time": 5.0,
+    })
+    assert res_correct.status_code == 200
+    body_c = res_correct.get_json()
+    assert body_c["correct"] is True
+    assert body_c["new_strength"] > body_c["previous_strength"]
+
+
+def test_quiz_attempt_invalid_inputs(client):
+    # Unknown question_id
+    res1 = client.post("/api/quiz/attempt", json={
+        "learner_id": "L_HARIHARAN",
+        "concept_id": "data_structures",
+        "question_id": "non_existent_q",
+        "selected_option": 0,
+    })
+    assert res1.status_code == 404
+
+    # selected_option out of range
+    res2 = client.post("/api/quiz/attempt", json={
+        "learner_id": "L_HARIHARAN",
+        "concept_id": "data_structures",
+        "question_id": "ds_q01",
+        "selected_option": 99,
+    })
+    assert res2.status_code == 400
+
+
