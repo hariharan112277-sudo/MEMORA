@@ -1,9 +1,15 @@
 __pycache__/
 *.pyc
-.env
-venv/
-.venv/
-storage/db.json
-models/*.joblib
 .pytest_cache/
 *.egg-info/
+venv/
+.venv/
+
+# Persistent runtime data & environment settings (ignored)
+storage/db.json
+.env
+
+# Tracked artifacts policy (DO NOT IGNORE):
+# models/retention_model.joblib, models/metrics.json, and data/dataset.csv
+# are tracked to allow zero-setup clone & run for the PBL demo.
+

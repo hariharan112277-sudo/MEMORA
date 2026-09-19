@@ -15,6 +15,11 @@ Run:
 Then visit http://localhost:5000/api/health
 """
 
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from flask import Flask
 from flask_cors import CORS
 
