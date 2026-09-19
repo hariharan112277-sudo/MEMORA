@@ -27,6 +27,7 @@ from routes.quiz import quiz_bp
 from routes.misc import misc_bp
 from routes.analytics import analytics_bp
 from routes.learners import learners_bp
+from routes.subjects import subjects_bp
 
 
 def create_app():
@@ -44,6 +45,7 @@ def create_app():
     app.register_blueprint(misc_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(learners_bp)
+    app.register_blueprint(subjects_bp)
 
     # Serve static assets from memora-ui/dist/assets
     @app.get("/assets/<path:filename>")
@@ -60,14 +62,13 @@ def create_app():
             return send_from_directory(dist_dir, "favicon.ico")
         return "", 204
 
-    # SPA Client routes
-    @app.get("/")
-    @app.get("/dashboard")
-    @app.get("/concepts")
-    @app.get("/schedule")
-    @app.get("/analytics")
-    @app.get("/about")
-    def serve_spa():
+    # SPA Client Catch-All Route for HTML5 History Mode
+    @app.route("/", defaults={"path": ""})
+    @app.route("/<path:path>")
+    def serve_spa(path):
+        if path.startswith("api/"):
+            return {"error": "API route not found"}, 404
+        
         index_file = os.path.join(dist_dir, "index.html")
         if os.path.exists(index_file):
             return send_file(index_file)

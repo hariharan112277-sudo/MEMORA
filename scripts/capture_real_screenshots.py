@@ -6,7 +6,6 @@ def capture():
     os.makedirs("docs", exist_ok=True)
     
     with sync_playwright() as p:
-        # Launch edge or chromium
         try:
             browser = p.chromium.launch(channel="msedge", headless=True)
         except Exception:
@@ -14,25 +13,33 @@ def capture():
             
         page = browser.new_page(viewport={"width": 1366, "height": 900})
         
-        # 1. Capture Dashboard
-        print("Navigating to http://localhost:5000/dashboard...")
-        page.goto("http://localhost:5000/dashboard")
-        page.wait_for_timeout(3000) # wait for API calls and Chart.js render
+        # 1. Login Page / Landing
+        print("Navigating to http://localhost:5000/login...")
+        page.goto("http://localhost:5000/login")
+        page.wait_for_timeout(2000)
+        page.screenshot(path=os.path.abspath("docs/screenshot-login.png"))
         
-        dashboard_path = os.path.abspath("docs/screenshot-dashboard.png")
-        page.screenshot(path=dashboard_path, full_page=False)
-        print(f"Saved dashboard screenshot to {dashboard_path}")
-        
-        # 2. Click Revise button to open Quiz modal
-        revise_btn = page.query_selector("button:has-text('Revise')")
-        if revise_btn:
-            revise_btn.click()
-            page.wait_for_timeout(1500)
-            quiz_path = os.path.abspath("docs/screenshot-quiz.png")
-            page.screenshot(path=quiz_path, full_page=False)
-            print(f"Saved quiz screenshot to {quiz_path}")
-        else:
-            print("Revise button not found")
+        # 2. Click "Continue with the demo learner"
+        demo_btn = page.query_selector("button:has-text('Continue with the demo learner')")
+        if demo_btn:
+            demo_btn.click()
+            page.wait_for_timeout(3000)
+            
+            # Dashboard Screenshot
+            page.screenshot(path=os.path.abspath("docs/screenshot-dashboard.png"))
+            print("Saved dashboard screenshot")
+            
+            # Navigate to Subjects
+            page.goto("http://localhost:5000/subjects")
+            page.wait_for_timeout(2000)
+            page.screenshot(path=os.path.abspath("docs/screenshot-subjects.png"))
+            print("Saved subjects screenshot")
+            
+            # Navigate to Analytics
+            page.goto("http://localhost:5000/analytics")
+            page.wait_for_timeout(2000)
+            page.screenshot(path=os.path.abspath("docs/screenshot-analytics.png"))
+            print("Saved analytics screenshot")
             
         browser.close()
 

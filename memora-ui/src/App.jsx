@@ -1,61 +1,53 @@
-import { Link, Route, Routes } from 'react-router-dom';
-import { Loader2, WifiOff } from 'lucide-react';
-import Navbar from './components/Navbar';
-import QuizModal from './components/QuizModal';
-import Toast from './components/Toast';
-import Dashboard from './pages/Dashboard';
-import Concepts from './pages/Concepts';
-import Schedule from './pages/Schedule';
-import Analytics from './pages/Analytics';
-import About from './pages/About';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useApp } from './context/AppContext';
+import AmbientBackground from './components/AmbientBackground';
+import AppShell from './components/AppShell';
+import ToastHost from './components/ToastHost';
+import { Spinner } from './components/ui';
+import LandingPage from './pages/LandingPage';
+import AuthPage from './pages/AuthPage';
+import Dashboard from './pages/Dashboard';
+import SubjectsHub from './pages/SubjectsHub';
+import SubjectDetail from './pages/SubjectDetail';
+import QuestionStudio from './pages/QuestionStudio';
+import ReviewSession from './pages/ReviewSession';
+import AnalyticsHub from './pages/AnalyticsHub';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
 
-function NotFound() {
-  return (
-    <div className="glass mx-auto mt-16 max-w-md p-10 text-center">
-      <p className="text-4xl font-extrabold text-white">404</p>
-      <p className="muted mt-2">That page doesn't exist.</p>
-      <Link to="/" className="btn-primary mt-5">Go to dashboard</Link>
-    </div>
-  );
-}
-
-function Gate({ children }) {
-  const { status, error, reload } = useApp();
-  if (status === 'loading') return <div className="grid place-items-center py-32"><Loader2 className="animate-spin text-indigo-300" size={32} aria-label="Loading" /></div>;
-  if (status === 'error') {
-    return (
-      <div className="glass mx-auto mt-16 max-w-lg p-8 text-center">
-        <WifiOff className="mx-auto text-rose-400" size={32} aria-hidden />
-        <h1 className="mt-3 text-xl font-bold text-white">Can't load your data</h1>
-        <p className="muted mt-2">{error}</p>
-        <button className="btn-primary mt-5" onClick={reload}>Try again</button>
-      </div>
-    );
-  }
-  return children;
+/** Redirects to /login unless a learner session exists. */
+function RequireLearner() {
+  const { learner, checking } = useApp();
+  if (checking) return <Spinner label="Starting Memora" />;
+  if (!learner) return <Navigate to="/login" replace />;
+  return <Outlet />;
 }
 
 export default function App() {
   return (
-    <>
-      <Navbar />
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-        <Gate>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
+    <BrowserRouter>
+      <AmbientBackground />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<AuthPage mode="login" />} />
+        <Route path="/signup" element={<AuthPage mode="signup" />} />
+
+        <Route element={<RequireLearner />}>
+          <Route element={<AppShell />}>
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/concepts" element={<Concepts />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/about" element={<About />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Gate>
-      </main>
-      <footer className="mx-auto max-w-7xl px-6 pb-8 text-xs text-slate-500">Memora · Cognitive learning retention · MIT License</footer>
-      <QuizModal />
-      <Toast />
-    </>
+            <Route path="/subjects" element={<SubjectsHub />} />
+            <Route path="/subjects/:subjectId" element={<SubjectDetail />} />
+            <Route path="/subjects/:subjectId/topics/:topicId/questions" element={<QuestionStudio />} />
+            <Route path="/analytics" element={<AnalyticsHub />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+          {/* Focus mode: the quiz runner has no sidebar */}
+          <Route path="/quiz/:topicId" element={<ReviewSession />} />
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <ToastHost />
+    </BrowserRouter>
   );
 }

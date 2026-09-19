@@ -1,125 +1,140 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api } from '../services/api';
+import { api, detectMode, getApiMode, onModeChange } from '../services/api';
+import { asList } from '../utils/memory';
 
-const Ctx = createContext(null);
-export const useApp = () => {
-  const v = useContext(Ctx);
-  if (!v) throw new Error('useApp must be used inside <AppProvider>');
-  return v;
+const AppCtx = createContext(null);
+export const useApp = () => useContext(AppCtx);
+
+const LEARNER_KEY = 'memora.learner';
+const PROFILE_PREFIX = 'memora.profile.';
+
+const readJSON = (key, fallback = null) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+const writeJSON = (key, value) => {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
 };
 
-const KEY = 'memora.learner';
-const EMPTY = { concepts: [], weak: [], schedule: [], overdue: 0, analytics: null };
+export const DEFAULT_NOTIFICATIONS = {
+  daily_reminder: true,
+  weak_alerts: true,
+  streak_warning: true,
+  weekly_report: false,
+};
+
+const buildProfile = (learner, stored) => ({
+  name: learner?.name || '',
+  goal: learner?.goal || '',
+  daily_target: Number(learner?.daily_target) || 10,
+  reminder_time: '19:00',
+  ...stored,
+  notifications: { ...DEFAULT_NOTIFICATIONS, ...(stored?.notifications || {}) },
+});
+
+const normalizeLearner = (l) => (l ? { ...l, id: l.id ?? l.learner_id, learner_id: l.learner_id ?? l.id } : null);
 
 export function AppProvider({ children }) {
-  const [learners, setLearners] = useState([]);
-  const [learnerId, setLearnerId] = useState('');
-  const [data, setData] = useState(EMPTY);
-  const [status, setStatus] = useState('loading'); // loading | ready | error
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [chartConceptId, setChartConceptId] = useState('');
-  const [quizConcept, setQuizConcept] = useState(null);
+  const [learner, setLearner] = useState(() => normalizeLearner(readJSON(LEARNER_KEY)));
+  const [profile, setProfile] = useState(() => {
+    const l = normalizeLearner(readJSON(LEARNER_KEY));
+    return l ? buildProfile(l, readJSON(PROFILE_PREFIX + l.id)) : null;
+  });
+  const [mode, setMode] = useState(getApiMode());
+  const [version, setVersion] = useState(0);
   const [toasts, setToasts] = useState([]);
+  const [checking, setChecking] = useState(true);
 
+  const refresh = useCallback(() => setVersion((v) => v + 1), []);
+
+  const toast = useCallback((message, type = 'success') => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts((t) => [...t, { id, message, type }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3800);
+  }, []);
   const dismissToast = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), []);
-  const toast = useCallback((message, type = 'info') => {
-    const id = `${Date.now()}${Math.random()}`;
-    setToasts((t) => [...t.slice(-3), { id, message, type }]);
-    setTimeout(() => dismissToast(id), 4500);
-  }, [dismissToast]);
 
-  const refresh = useCallback(async (id) => {
-    if (!id) return;
-    try {
-      const [c, w, s, a] = await Promise.all([
-        api.concepts(id), api.weakConcepts(id), api.generateSchedule(id), api.analytics(id),
-      ]);
-      setData({
-        concepts: c.concepts || [],
-        weak: w.weak_concepts || [],
-        schedule: s.schedule || [],
-        overdue: s.overdue_count || 0,
-        analytics: a,
-      });
-      setStatus('ready');
-      setError('');
-    } catch (e) {
-      setError(e.message);
-      setStatus('error');
-    }
+  const login = useCallback((l) => {
+    const norm = normalizeLearner(l);
+    writeJSON(LEARNER_KEY, norm);
+    setLearner(norm);
+    setProfile(buildProfile(norm, readJSON(PROFILE_PREFIX + norm.id)));
+    setVersion((v) => v + 1);
   }, []);
 
-  const bootstrap = useCallback(async (preferred) => {
-    setStatus((s) => (s === 'ready' ? s : 'loading'));
-    try {
-      const { learners: list = [] } = await api.learners();
-      setLearners(list);
-      const stored = preferred || localStorage.getItem(KEY);
-      const pick = list.find((l) => l.learner_id === stored)?.learner_id || list[0]?.learner_id || '';
-      setLearnerId(pick);
-      if (pick) {
-        localStorage.setItem(KEY, pick);
-        await refresh(pick);
-      } else {
-        setData(EMPTY);
-        setStatus('ready');
-      }
-    } catch (e) {
-      setError(e.message);
-      setStatus('error');
-    }
-  }, [refresh]);
+  const logout = useCallback(() => {
+    localStorage.removeItem(LEARNER_KEY);
+    setLearner(null);
+    setProfile(null);
+  }, []);
 
-  useEffect(() => { bootstrap(); }, [bootstrap]);
+  const saveProfile = useCallback(
+    (patch) => {
+      if (!learner) return;
+      const next = { ...profile, ...patch };
+      setProfile(next);
+      writeJSON(PROFILE_PREFIX + learner.id, next);
+    },
+    [learner, profile]
+  );
 
+  const advanceDay = useCallback(
+    async (days) => {
+      await api.advanceDay(days);
+      toast(`Advanced ${days} day${days > 1 ? 's' : ''}. Memories have decayed accordingly.`);
+      refresh();
+    },
+    [toast, refresh]
+  );
+
+  const resetAll = useCallback(async () => {
+    await api.resetDemo();
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith(PROFILE_PREFIX))
+      .forEach((k) => localStorage.removeItem(k));
+    const rawList = asList(await api.getLearners(), 'learners');
+    const list = rawList.map(normalizeLearner);
+    const next = list.find((l) => l.id === learner?.id) || list[0];
+    if (next) login(next);
+    else logout();
+    toast('Demo data reset to its original state.');
+  }, [learner, login, logout, toast]);
+
+  // Detect live vs demo backend, then make sure the stored session still exists.
   useEffect(() => {
-    const cs = data.concepts;
-    if (!cs.length || cs.some((c) => c.concept_id === chartConceptId)) return;
-    setChartConceptId([...cs].sort((a, b) => a.retention - b.retention)[0].concept_id);
-  }, [data.concepts, chartConceptId]);
+    const off = onModeChange(setMode);
+    let alive = true;
+    (async () => {
+      await detectMode();
+      if (!alive) return;
+      setMode(getApiMode());
+      const stored = normalizeLearner(readJSON(LEARNER_KEY));
+      if (stored) {
+        try {
+          const rawList = asList(await api.getLearners(), 'learners');
+          const list = rawList.map(normalizeLearner);
+          if (alive && list.length && !list.some((l) => String(l.id) === String(stored.id))) {
+            // Auto-login to available learner if stored session changed
+            const fallback = list[0];
+            if (fallback) login(fallback);
+          }
+        } catch { /* keep session */ }
+      }
+      if (alive) setChecking(false);
+    })();
+    return () => {
+      alive = false;
+      off();
+    };
+  }, []);
 
-  const act = useCallback(async (fn, okMsg) => {
-    setBusy(true);
-    try {
-      const r = await fn();
-      await refresh(learnerId);
-      if (okMsg) toast(okMsg, 'success');
-      return r;
-    } catch (e) {
-      toast(e.message, 'error');
-    } finally {
-      setBusy(false);
-    }
-  }, [learnerId, refresh, toast]);
-
-  const value = useMemo(() => ({
-    learners, learnerId, ...data, status, error, busy, toasts, dismissToast, toast,
-    day: data.analytics?.current_day ?? 0,
-    learner: learners.find((l) => l.learner_id === learnerId),
-    chartConceptId, setChartConceptId,
-    quizConcept,
-    reload: () => bootstrap(learnerId),
-    refreshNow: () => act(async () => {}, 'Schedule refreshed'),
-    selectLearner: (id) => { setLearnerId(id); localStorage.setItem(KEY, id); setChartConceptId(''); refresh(id); },
-    advanceDay: (by) => act(() => api.advanceDay(by), `Advanced ${by === 1 ? '1 day' : `${by} days`}`),
-    resetDemo: async () => {
-      setBusy(true);
-      try { await api.reset(); await bootstrap(); toast('Demo data reset', 'success'); }
-      catch (e) { toast(e.message, 'error'); }
-      finally { setBusy(false); }
-    },
-    createLearner: async (name) => {
-      setBusy(true);
-      try { const r = await api.createLearner(name); await bootstrap(r.learner_id); toast(`Added learner ${name}`, 'success'); }
-      catch (e) { toast(e.message, 'error'); }
-      finally { setBusy(false); }
-    },
-    addConcept: (payload) => act(() => api.addConcept(learnerId, payload), `Added ${payload.name}`),
-    removeConcept: (c) => act(() => api.deleteConcept(learnerId, c.concept_id), `Removed ${c.name}`),
-    openQuiz: (c) => setQuizConcept(c),
-    closeQuiz: () => { setQuizConcept(null); refresh(learnerId); },
-  }), [learners, learnerId, data, status, error, busy, toasts, chartConceptId, quizConcept, act, bootstrap, refresh, toast, dismissToast]);
-
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  const value = useMemo(
+    () => ({ learner, profile, mode, version, checking, toasts, toast, dismissToast, login, logout, saveProfile, refresh, advanceDay, resetAll }),
+    [learner, profile, mode, version, checking, toasts, toast, dismissToast, login, logout, saveProfile, refresh, advanceDay, resetAll]
+  );
+  return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
