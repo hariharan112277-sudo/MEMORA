@@ -4,68 +4,113 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MEMORA — Cognitive Learning Retention Dashboard</title>
+  <!-- Google Fonts & Chart.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
-      --bg: #0b1020;
-      --panel: #141b30;
-      --panel-border: #232c4a;
-      --text: #e8ecf8;
-      --muted: #8b94b3;
-      --accent: #4f7cff;
-      --accent-hover: #3b68ed;
-      --stable: #2ecc71;
-      --weak: #f39c12;
-      --critical: #e74c3c;
-      --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --bg-gradient: radial-gradient(circle at 50% -20%, #1a2238 0%, #090d16 70%, #05070d 100%);
+      --panel-bg: rgba(15, 22, 41, 0.75);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --panel-border-hover: rgba(99, 102, 241, 0.3);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.4);
+      --stable: #10b981;
+      --stable-glow: rgba(16, 185, 129, 0.4);
+      --weak: #f59e0b;
+      --weak-glow: rgba(245, 158, 11, 0.4);
+      --critical: #ef4444;
+      --critical-glow: rgba(239, 68, 68, 0.4);
+      --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background-color: var(--bg);
+      background: var(--bg-gradient);
+      background-attachment: fixed;
       color: var(--text);
-      font-family: var(--font);
+      font-family: var(--font-family);
       line-height: 1.5;
-      padding: 16px;
+      padding: 24px 16px;
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Layout */
     .container {
       max-width: 1280px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 24px;
     }
 
-    /* Header */
-    header {
-      background: var(--panel);
+    /* Modern Glass Panel */
+    .glass-panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--panel-border);
-      border-radius: 14px;
-      padding: 16px 24px;
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    /* Header Navigation */
+    header.glass-panel {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      padding: 16px 24px;
     }
+
     .brand {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .brand-icon {
-      width: 14px;
-      height: 14px;
+
+    .brand-logo-glow {
+      position: relative;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-logo-glow::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
       border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 10px var(--accent);
+      filter: blur(6px);
+      opacity: 0.8;
+    }
+
+    .brand-logo-inner {
+      position: relative;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #6366f1;
     }
 
     .controls {
@@ -76,59 +121,92 @@
     }
 
     select, input, button {
-      font-family: inherit;
-      font-size: 0.9rem;
-      border-radius: 8px;
+      font-family: var(--font-family);
+      font-size: 0.875rem;
+      border-radius: 10px;
       outline: none;
     }
 
     select {
-      background: #0d1326;
+      background: rgba(10, 15, 29, 0.8);
       color: var(--text);
-      border: 1px solid var(--panel-border);
-      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 14px;
       cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    select:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
     }
 
     .chip-day {
-      background: rgba(79, 124, 255, 0.15);
-      color: var(--accent);
-      border: 1px solid rgba(79, 124, 255, 0.3);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 0.9rem;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
+      color: #a78bfa;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      letter-spacing: 0.5px;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.15);
     }
 
     .btn {
-      background: var(--accent);
-      color: #fff;
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+      color: #ffffff;
       border: none;
-      padding: 8px 16px;
+      padding: 8px 18px;
       font-weight: 600;
+      border-radius: 10px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
     }
-    .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn:hover {
+      transform: translateY(-1.5px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+    }
+    .btn:active { transform: translateY(0); }
+
     .btn-secondary {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--panel-border);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       color: var(--text);
+      box-shadow: none;
     }
-    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
-    .btn-danger { background: rgba(231, 76, 60, 0.2); color: var(--critical); border: 1px solid rgba(231, 76, 60, 0.4); }
-    .btn-danger:hover { background: rgba(231, 76, 60, 0.4); }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      box-shadow: none;
+    }
+    .btn-danger:hover {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.35), rgba(220, 38, 38, 0.35));
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+    }
 
     .input-num {
-      width: 50px;
-      background: #0d1326;
+      width: 54px;
+      background: rgba(10, 15, 29, 0.8);
       color: var(--text);
-      border: 1px solid var(--panel-border);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       padding: 7px;
       text-align: center;
+      font-weight: 600;
+    }
+    .input-num:focus {
+      border-color: var(--accent);
     }
 
     /* KPI Grid */
@@ -137,21 +215,41 @@
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
     }
-    .kpi-card {
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 14px;
-      padding: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    }
-    .kpi-title { font-size: 0.85rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-    .kpi-value { font-size: 2rem; font-weight: 700; margin-top: 8px; }
-    .kpi-value.stable { color: var(--stable); }
-    .kpi-value.weak { color: var(--weak); }
-    .kpi-value.critical { color: var(--critical); }
-    .kpi-value.accent { color: var(--accent); }
 
-    /* Main Content Split */
+    .kpi-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi-card.retention-kpi::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
+    .kpi-card.stable-kpi::before { background: linear-gradient(90deg, #10b981, #34d399); }
+    .kpi-card.weak-kpi::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .kpi-card.critical-kpi::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+    .kpi-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .kpi-value {
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-top: 10px;
+      letter-spacing: -0.5px;
+    }
+    .kpi-value.accent { color: #818cf8; text-shadow: 0 0 16px rgba(99, 102, 241, 0.3); }
+    .kpi-value.stable { color: #34d399; text-shadow: 0 0 16px rgba(16, 185, 129, 0.3); }
+    .kpi-value.weak { color: #fbbf24; text-shadow: 0 0 16px rgba(245, 158, 11, 0.3); }
+    .kpi-value.critical { color: #f87171; text-shadow: 0 0 16px rgba(239, 68, 68, 0.3); }
+
+    /* Layout Splits */
     .main-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -161,80 +259,120 @@
       .main-grid { grid-template-columns: 1fr 1fr; }
     }
 
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 14px;
-      padding: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
     .panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--panel-border);
-      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 14px;
+      margin-bottom: 16px;
     }
-    .panel-title { font-size: 1.1rem; font-weight: 600; }
-
-    /* Status Pills */
-    .pill {
-      font-size: 0.75rem;
+    .panel-title {
+      font-size: 1.1rem;
       font-weight: 700;
-      text-transform: uppercase;
-      padding: 3px 10px;
-      border-radius: 12px;
-      display: inline-block;
+      letter-spacing: 0.2px;
     }
-    .pill.stable { background: rgba(46, 204, 113, 0.15); color: var(--stable); border: 1px solid rgba(46, 204, 113, 0.3); }
-    .pill.weak { background: rgba(243, 156, 18, 0.15); color: var(--weak); border: 1px solid rgba(243, 156, 18, 0.3); }
-    .pill.critical { background: rgba(231, 76, 60, 0.15); color: var(--critical); border: 1px solid rgba(231, 76, 60, 0.3); }
+
+    /* Glossy Status Pills */
+    .pill {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .pill::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .pill.stable {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .pill.stable::before { background: #34d399; box-shadow: 0 0 8px #34d399; }
+
+    .pill.weak {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .pill.weak::before { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+
+    .pill.critical {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .pill.critical::before { background: #f87171; box-shadow: 0 0 8px #f87171; }
 
     /* Concept Rows */
     .concept-list { display: flex; flex-direction: column; gap: 12px; }
     .concept-row {
-      background: #0d1326;
-      border: 1px solid var(--panel-border);
-      border-radius: 10px;
-      padding: 14px;
+      background: rgba(10, 15, 29, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+    .concept-row:hover {
+      border-color: rgba(99, 102, 241, 0.25);
+      background: rgba(13, 20, 38, 0.8);
+      transform: translateY(-1px);
     }
     .concept-row-top { display: flex; justify-content: space-between; align-items: center; }
-    .concept-name { font-weight: 600; font-size: 0.95rem; }
-    .concept-meta { display: flex; align-items: center; gap: 12px; font-size: 0.8rem; color: var(--muted); }
+    .concept-name { font-weight: 700; font-size: 0.95rem; }
+    .concept-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
     .bar-container {
       height: 8px;
-      background: rgba(255,255,255,0.06);
-      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
       overflow: hidden;
       width: 100%;
+      position: relative;
     }
     .bar-fill {
       height: 100%;
-      border-radius: 4px;
-      transition: width 0.4s ease, background-color 0.4s ease;
+      border-radius: 999px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Schedule Items */
     .schedule-list { display: flex; flex-direction: column; gap: 10px; }
     .schedule-item {
-      background: #0d1326;
-      border: 1px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 12px 16px;
+      background: rgba(10, 15, 29, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 14px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      transition: all 0.2s ease;
     }
-    .schedule-badge { font-weight: 700; font-size: 0.85rem; }
-    .schedule-badge.overdue { color: var(--critical); }
-    .schedule-badge.today { color: var(--weak); }
-    .schedule-badge.future { color: var(--muted); }
+    .schedule-item:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(13, 20, 38, 0.8);
+    }
+    .schedule-badge { font-weight: 700; font-size: 0.825rem; }
+    .schedule-badge.overdue { color: #f87171; text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+    .schedule-badge.today { color: #fbbf24; }
+    .schedule-badge.future { color: var(--text-muted); }
 
     /* Charts Section */
     .charts-grid {
@@ -247,6 +385,28 @@
     }
     .chart-container { position: relative; height: 260px; width: 100%; }
 
+    /* Custom Chart Legend Header */
+    .chart-legend-custom {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-line {
+      width: 14px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    .legend-line.curve { background: #6366f1; box-shadow: 0 0 8px rgba(99, 102, 241, 0.6); }
+    .legend-line.thresh { background: #ef4444; border-top: 1px dashed #ef4444; }
+
     /* HTML Fallback Bar Charts */
     .fallback-chart {
       display: flex;
@@ -254,7 +414,7 @@
       gap: 12px;
       height: 200px;
       padding: 16px 0;
-      border-bottom: 1px solid var(--panel-border);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .fallback-col {
       flex: 1;
@@ -268,16 +428,17 @@
     .fallback-bar {
       width: 100%;
       max-width: 40px;
-      background: var(--accent);
-      border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+      border-radius: 6px 6px 0 0;
     }
 
     /* Modal */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
+      background: rgba(5, 8, 16, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -291,81 +452,136 @@
       pointer-events: auto;
     }
     .modal {
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 16px;
-      max-width: 560px;
-      width: 90%;
-      padding: 24px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      background: rgba(15, 22, 41, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      max-width: 580px;
+      width: 92%;
+      padding: 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
       display: flex;
       flex-direction: column;
       gap: 20px;
+      animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalSlide {
+      from { transform: translateY(20px) scale(0.96); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
     }
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 14px;
     }
     .timer-badge {
-      background: rgba(243, 156, 18, 0.15);
-      color: var(--weak);
-      border: 1px solid rgba(243, 156, 18, 0.3);
-      padding: 4px 10px;
-      border-radius: 12px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 4px 12px;
+      border-radius: 999px;
       font-weight: 700;
       font-size: 0.85rem;
+      letter-spacing: 0.5px;
     }
 
     .options-grid {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
     .option-btn {
-      background: #0d1326;
-      border: 1px solid var(--panel-border);
+      background: rgba(10, 15, 29, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       color: var(--text);
-      padding: 12px 16px;
-      border-radius: 8px;
+      padding: 14px 18px;
+      border-radius: 12px;
       text-align: left;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.925rem;
+      font-weight: 500;
       transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
     .option-btn:hover {
       border-color: var(--accent);
-      background: rgba(79, 124, 255, 0.08);
+      background: rgba(99, 102, 241, 0.12);
+      transform: translateX(2px);
     }
-    .option-btn.correct { background: rgba(46, 204, 113, 0.2) !important; border-color: var(--stable) !important; color: #fff; }
-    .option-btn.wrong { background: rgba(231, 76, 60, 0.2) !important; border-color: var(--critical) !important; color: #fff; }
+    .option-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .option-btn.correct {
+      background: rgba(16, 185, 129, 0.2) !important;
+      border-color: #10b981 !important;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+    }
+    .option-btn.correct .option-badge {
+      background: #10b981;
+      color: #fff;
+    }
+    .option-btn.wrong {
+      background: rgba(239, 68, 68, 0.2) !important;
+      border-color: #ef4444 !important;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+    }
+    .option-btn.wrong .option-badge {
+      background: #ef4444;
+      color: #fff;
+    }
 
     .feedback-box {
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      margin-top: 10px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      margin-top: 6px;
+      line-height: 1.5;
     }
-    .feedback-box.correct { background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.3); color: var(--stable); }
-    .feedback-box.wrong { background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.3); color: var(--critical); }
+    .feedback-box.correct {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+    }
+    .feedback-box.wrong {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #f87171;
+    }
 
     /* Toast */
     #toast-area {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 24px;
+      right: 24px;
       z-index: 2000;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
     .toast {
-      background: rgba(231, 76, 60, 0.9);
+      background: rgba(239, 68, 68, 0.95);
+      backdrop-filter: blur(8px);
       color: #fff;
       padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      font-size: 0.9rem;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      font-size: 0.875rem;
+      font-weight: 600;
       animation: fadeIn 0.3s ease;
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -373,10 +589,12 @@
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
-    <header>
+    <!-- Header Navigation -->
+    <header class="glass-panel">
       <div class="brand">
-        <div class="brand-icon"></div>
+        <div class="brand-logo-glow">
+          <div class="brand-logo-inner"></div>
+        </div>
         <span>MEMORA</span>
       </div>
       <div class="controls">
@@ -395,21 +613,21 @@
       </div>
     </header>
 
-    <!-- KPI Grid -->
+    <!-- KPI Metric Cards Grid -->
     <div class="kpi-grid">
-      <div class="kpi-card">
+      <div class="glass-panel kpi-card retention-kpi">
         <div class="kpi-title">Overall Retention</div>
         <div class="kpi-value accent" id="kpi-overall">--%</div>
       </div>
-      <div class="kpi-card">
+      <div class="glass-panel kpi-card stable-kpi">
         <div class="kpi-title">Stable Concepts</div>
         <div class="kpi-value stable" id="kpi-stable">0</div>
       </div>
-      <div class="kpi-card">
+      <div class="glass-panel kpi-card weak-kpi">
         <div class="kpi-title">Weak Concepts</div>
         <div class="kpi-value weak" id="kpi-weak">0</div>
       </div>
-      <div class="kpi-card">
+      <div class="glass-panel kpi-card critical-kpi">
         <div class="kpi-title">Critical Concepts</div>
         <div class="kpi-value critical" id="kpi-critical">0</div>
       </div>
@@ -417,27 +635,27 @@
 
     <!-- Main Content Split -->
     <div class="main-grid">
-      <!-- Left Panel: All Concepts -->
-      <div class="panel">
+      <!-- Left Panel: All Tracked Concepts -->
+      <div class="glass-panel">
         <div class="panel-header">
           <div class="panel-title">Tracked Concepts</div>
-          <span style="font-size: 0.8rem; color: var(--muted);" id="concept-count-label">0 concepts</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);" id="concept-count-label">0 concepts</span>
         </div>
         <div class="concept-list" id="concept-list"></div>
       </div>
 
       <!-- Right Panel Stack -->
       <div style="display:flex; flex-direction:column; gap:20px;">
-        <!-- Weak Panel -->
-        <div class="panel">
+        <!-- Weak & Critical Priority Panel -->
+        <div class="glass-panel">
           <div class="panel-header">
-            <div class="panel-title" style="color: var(--weak);">Weak & Critical Priority</div>
+            <div class="panel-title" style="color: #fbbf24;">Weak & Critical Priority</div>
           </div>
           <div id="weak-list" class="concept-list"></div>
         </div>
 
         <!-- Schedule Panel -->
-        <div class="panel">
+        <div class="glass-panel">
           <div class="panel-header">
             <div class="panel-title">Revision Schedule</div>
             <span id="overdue-badge" class="pill critical" style="display:none;">0 Overdue</span>
@@ -449,9 +667,15 @@
 
     <!-- Charts Row -->
     <div class="charts-grid">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title" id="curve-chart-title">Retention Curve</div>
+      <div class="glass-panel">
+        <div class="panel-header" style="margin-bottom:8px;">
+          <div>
+            <div class="panel-title" id="curve-chart-title">Retention Curve</div>
+            <div class="chart-legend-custom">
+              <span class="legend-item"><span class="legend-line curve"></span> Retention Curve (%)</span>
+              <span class="legend-item"><span class="legend-line thresh"></span> Threshold (80%)</span>
+            </div>
+          </div>
           <span class="pill stable" id="ml-badge">ML Active</span>
         </div>
         <div class="chart-container" id="curve-chart-wrapper">
@@ -459,10 +683,10 @@
         </div>
       </div>
 
-      <div class="panel">
+      <div class="glass-panel">
         <div class="panel-header">
           <div class="panel-title">Retention Trend</div>
-          <span style="font-size: 0.8rem; color: var(--muted);">Historical Daily Avg</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Historical Daily Avg</span>
         </div>
         <div class="chart-container" id="trend-chart-wrapper">
           <canvas id="trendChart"></canvas>
@@ -471,18 +695,18 @@
     </div>
   </div>
 
-  <!-- Quiz Modal -->
+  <!-- Interactive Quiz Modal -->
   <div class="modal-overlay" id="quiz-modal">
     <div class="modal">
       <div class="modal-header">
-        <div style="font-weight:700; font-size:1.1rem;" id="modal-concept-name">Concept Quiz</div>
+        <div style="font-weight:700; font-size:1.15rem;" id="modal-concept-name">Concept Quiz</div>
         <div class="timer-badge" id="modal-timer">0.0s</div>
       </div>
       <div id="modal-body"></div>
     </div>
   </div>
 
-  <!-- Toast Container -->
+  <!-- Toast Notification Area -->
   <div id="toast-area" aria-live="polite"></div>
 
   <script>
@@ -561,7 +785,6 @@
     async function refreshAll() {
       if (!currentLearnerId) return;
 
-      // Parallel API calls
       const [analytics, conceptsData, weakData, scheduleData] = await Promise.all([
         api(`/api/analytics?learner_id=${currentLearnerId}`).catch(() => null),
         api(`/api/concepts?learner_id=${currentLearnerId}`).catch(() => null),
@@ -602,8 +825,16 @@
 
       concepts.forEach(c => {
         const pct = Math.round(c.retention * 100);
-        const color = c.status === "stable" ? "var(--stable)" : c.status === "weak" ? "var(--weak)" : "var(--critical)";
-        
+        let color = "linear-gradient(90deg, #10b981 0%, #06b6d4 100%)";
+        let textCol = "#34d399";
+        if (c.status === "weak") {
+          color = "linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)";
+          textCol = "#fbbf24";
+        } else if (c.status === "critical") {
+          color = "linear-gradient(90deg, #ef4444 0%, #f87171 100%)";
+          textCol = "#f87171";
+        }
+
         const row = document.createElement("div");
         row.className = "concept-row";
         row.innerHTML = `
@@ -613,18 +844,18 @@
               <span class="pill ${c.status}" style="margin-left: 8px;">${c.status}</span>
             </div>
             <div style="display:flex; gap:8px;">
-              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="selectConceptForCurve('${c.concept_id}')">📈</button>
-              <button class="btn" style="padding: 4px 10px; font-size: 0.8rem;" onclick="startQuizModal('${c.concept_id}', '${c.name.replace(/'/g, "\\'")}')">Revise</button>
+              <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;" title="View retention curve" onclick="selectConceptForCurve('${c.concept_id}')">📈 Chart</button>
+              <button class="btn" style="padding: 5px 12px; font-size: 0.8rem;" onclick="startQuizModal('${c.concept_id}', '${c.name.replace(/'/g, "\\'")}')">Revise</button>
             </div>
           </div>
           <div class="concept-meta">
-            <span>S: ${c.strength}d</span>
+            <span>S: <strong>${c.strength}d</strong></span>
             <span>Last: Day ${c.last_review}</span>
             <span>Acc: ${c.rolling_quiz_accuracy !== null && c.rolling_quiz_accuracy !== undefined ? Math.round(c.rolling_quiz_accuracy * 100) + '%' : 'N/A'}</span>
-            <span style="margin-left:auto; font-weight:700; color:${color}">${pct}%</span>
+            <span style="margin-left:auto; font-weight:800; color:${textCol}">${pct}%</span>
           </div>
           <div class="bar-container">
-            <div class="bar-fill" style="width: ${pct}%; background-color: ${color}"></div>
+            <div class="bar-fill" style="width: ${pct}%; background: ${color}; box-shadow: 0 0 10px ${textCol}66;"></div>
           </div>
         `;
         container.appendChild(row);
@@ -636,13 +867,13 @@
       container.innerHTML = "";
 
       if (weakConcepts.length === 0) {
-        container.innerHTML = `<div style="color: var(--muted); font-size: 0.85rem; padding: 10px 0;">All concepts are in stable condition!</div>`;
+        container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.875rem; padding: 12px 0;">All concepts are in stable condition!</div>`;
         return;
       }
 
       weakConcepts.forEach(c => {
         const pct = Math.round(c.retention * 100);
-        const color = c.status === "critical" ? "var(--critical)" : "var(--weak)";
+        const textCol = c.status === "critical" ? "#f87171" : "#fbbf24";
 
         const row = document.createElement("div");
         row.className = "concept-row";
@@ -652,10 +883,10 @@
               <span class="concept-name">${c.name}</span>
               <span class="pill ${c.status}" style="margin-left: 8px;">${c.status}</span>
             </div>
-            <button class="btn" style="padding: 4px 10px; font-size: 0.8rem;" onclick="startQuizModal('${c.concept_id}', '${c.name.replace(/'/g, "\\'")}')">Revise →</button>
+            <button class="btn" style="padding: 5px 12px; font-size: 0.8rem;" onclick="startQuizModal('${c.concept_id}', '${c.name.replace(/'/g, "\\'")}')">Revise →</button>
           </div>
           <div class="concept-meta">
-            <span>Retention: <strong style="color:${color}">${pct}%</strong></span>
+            <span>Retention: <strong style="color:${textCol}">${pct}%</strong></span>
             <span>S: ${c.strength}d</span>
           </div>
         `;
@@ -669,7 +900,7 @@
 
       const overdueBadge = document.getElementById("overdue-badge");
       if (overdueCount > 0) {
-        overdueBadge.style.display = "inline-block";
+        overdueBadge.style.display = "inline-flex";
         overdueBadge.textContent = `${overdueCount} Overdue`;
       } else {
         overdueBadge.style.display = "none";
@@ -679,21 +910,21 @@
         let text = "";
         let badgeClass = "future";
         if (s.overdue) {
-          text = `OVERDUE by ${s.days_overdue}d`;
+          text = `OVERDUE BY ${s.days_overdue}D`;
           badgeClass = "overdue";
         } else if (s.due_in_days === 0) {
-          text = "Due today";
+          text = "DUE TODAY";
           badgeClass = "today";
         } else {
-          text = `Due in ${s.due_in_days}d`;
+          text = `DUE IN ${s.due_in_days}D`;
         }
 
         const item = document.createElement("div");
         item.className = "schedule-item";
         item.innerHTML = `
           <div>
-            <div style="font-weight:600; font-size:0.9rem;">${s.concept_name}</div>
-            <div style="font-size:0.75rem; color:var(--muted);">Current retention: ${Math.round(s.current_retention * 100)}%</div>
+            <div style="font-weight:700; font-size:0.9rem;">${s.concept_name}</div>
+            <div style="font-size:0.775rem; color:var(--text-muted); margin-top:2px;">Current retention: ${Math.round(s.current_retention * 100)}%</div>
           </div>
           <div class="schedule-badge ${badgeClass}">${text}</div>
         `;
@@ -723,6 +954,10 @@
         const ctx = document.getElementById("curveChart").getContext("2d");
         if (curveChartInst) curveChartInst.destroy();
 
+        const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.35)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
         const labels = data.curve.map(p => `Day ${p.day}`);
         const values = data.curve.map(p => p.retention);
 
@@ -734,16 +969,23 @@
               {
                 label: "Retention Curve (%)",
                 data: values,
-                borderColor: "#4f7cff",
-                backgroundColor: "rgba(79, 124, 255, 0.1)",
+                borderColor: "#6366f1",
+                borderWidth: 3,
+                backgroundColor: gradient,
                 fill: true,
-                tension: 0.3,
+                tension: 0.35,
+                pointBackgroundColor: "#818cf8",
+                pointBorderColor: "#0f172a",
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 7,
               },
               {
                 label: "Threshold (80%)",
                 data: Array(values.length).fill(80),
-                borderColor: "#e74c3c",
-                borderDash: [5, 5],
+                borderColor: "#ef4444",
+                borderWidth: 2,
+                borderDash: [6, 6],
                 pointRadius: 0,
                 fill: false,
               }
@@ -753,20 +995,28 @@
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: { min: 0, max: 100, grid: { color: "#232c4a" }, ticks: { color: "#8b94b3" } },
-              x: { grid: { color: "#232c4a" }, ticks: { color: "#8b94b3" } }
+              y: {
+                min: 0, max: 100,
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#94a3b8", font: { family: "Plus Jakarta Sans", size: 11 } }
+              },
+              x: {
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#94a3b8", font: { family: "Plus Jakarta Sans", size: 11 } }
+              }
             },
-            plugins: { legend: { labels: { color: "#e8ecf8" } } }
+            plugins: {
+              legend: { display: false } // Using custom HTML legend header
+            }
           }
         });
       } else {
-        // Fallback HTML Bar Chart
         const wrapper = document.getElementById("curve-chart-wrapper");
         wrapper.innerHTML = `<div class="fallback-chart">` +
           data.curve.map(p => `
             <div class="fallback-col">
               <div class="fallback-bar" style="height:${p.retention}%;"></div>
-              <span style="font-size:0.7rem; color:var(--muted);">${p.day}d</span>
+              <span style="font-size:0.7rem; color:var(--text-muted);">${p.day}d</span>
             </div>
           `).join("") + `</div>`;
       }
@@ -774,7 +1024,7 @@
 
     function renderTrendChart(trend) {
       if (!trend || trend.length === 0) {
-        document.getElementById("trend-chart-wrapper").innerHTML = `<div style="color:var(--muted); padding:40px; text-align:center;">Advance days to accumulate trend history.</div>`;
+        document.getElementById("trend-chart-wrapper").innerHTML = `<div style="color:var(--text-muted); padding:50px 0; text-align:center; font-size:0.875rem;">Advance days to accumulate trend history.</div>`;
         return;
       }
 
@@ -786,6 +1036,10 @@
         const ctx = document.getElementById("trendChart").getContext("2d");
         if (trendChartInst) trendChartInst.destroy();
 
+        const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
         trendChartInst = new Chart(ctx, {
           type: "line",
           data: {
@@ -793,20 +1047,34 @@
             datasets: [{
               label: "Avg Retention (%)",
               data: trend.map(t => Math.round(t.avg_retention * 100)),
-              borderColor: "#2ecc71",
-              backgroundColor: "rgba(46, 204, 113, 0.1)",
+              borderColor: "#10b981",
+              borderWidth: 3,
+              backgroundColor: gradient,
               fill: true,
-              tension: 0.3,
+              tension: 0.35,
+              pointBackgroundColor: "#34d399",
+              pointBorderColor: "#0f172a",
+              pointBorderWidth: 2,
+              pointRadius: 4,
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: { min: 0, max: 100, grid: { color: "#232c4a" }, ticks: { color: "#8b94b3" } },
-              x: { grid: { color: "#232c4a" }, ticks: { color: "#8b94b3" } }
+              y: {
+                min: 0, max: 100,
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#94a3b8", font: { family: "Plus Jakarta Sans", size: 11 } }
+              },
+              x: {
+                grid: { color: "rgba(255, 255, 255, 0.05)" },
+                ticks: { color: "#94a3b8", font: { family: "Plus Jakarta Sans", size: 11 } }
+              }
             },
-            plugins: { legend: { labels: { color: "#e8ecf8" } } }
+            plugins: {
+              legend: { display: false }
+            }
           }
         });
       }
@@ -818,12 +1086,10 @@
       document.getElementById("modal-concept-name").textContent = `Quiz: ${conceptName}`;
       document.getElementById("quiz-modal").classList.add("active");
 
-      // Fetch concept strength before quiz
       const conceptData = await api(`/api/concepts?learner_id=${currentLearnerId}`);
       const conceptObj = (conceptData.concepts || []).find(c => c.concept_id === conceptId);
       initialStrength = conceptObj ? conceptObj.strength : 5.0;
 
-      // Fetch questions
       const res = await api(`/api/quiz/questions?learner_id=${currentLearnerId}&concept_id=${conceptId}&limit=5`).catch(() => null);
       quizQuestions = (res && res.questions) ? res.questions : [];
       quizIndex = 0;
@@ -847,12 +1113,17 @@
         document.getElementById("modal-timer").textContent = `${elapsed}s`;
       }, 100);
 
+      const optionLetters = ['A', 'B', 'C', 'D'];
+
       body.innerHTML = `
-        <div style="font-size:0.8rem; color:var(--muted); margin-bottom:6px;">Question ${quizIndex + 1} of ${quizQuestions.length}</div>
-        <div style="font-size:1rem; font-weight:600; margin-bottom:16px;">${q.text}</div>
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px; font-weight:700;">QUESTION ${quizIndex + 1} OF ${quizQuestions.length}</div>
+        <div style="font-size:1.05rem; font-weight:700; margin-bottom:20px; line-height:1.4;">${q.text}</div>
         <div class="options-grid">
           ${q.options.map((opt, idx) => `
-            <button class="option-btn" onclick="submitAttempt(${idx})">${opt}</button>
+            <button class="option-btn" onclick="submitAttempt(${idx})">
+              <span class="option-badge">${optionLetters[idx] || idx+1}</span>
+              <span>${opt}</span>
+            </button>
           `).join("")}
         </div>
       `;
@@ -878,7 +1149,6 @@
 
       if (res.correct) quizScore++;
 
-      // Show immediate feedback
       const btns = document.querySelectorAll(".option-btn");
       btns.forEach((b, idx) => {
         b.disabled = true;
@@ -889,7 +1159,7 @@
       const body = document.getElementById("modal-body");
       const feedback = document.createElement("div");
       feedback.className = `feedback-box ${res.correct ? 'correct' : 'wrong'}`;
-      feedback.innerHTML = `<strong>${res.correct ? 'Correct!' : 'Incorrect'}</strong> ${res.explanation || ''}`;
+      feedback.innerHTML = `<strong>${res.correct ? 'Correct!' : 'Incorrect.'}</strong> ${res.explanation || ''}`;
       body.appendChild(feedback);
 
       setTimeout(() => {
@@ -899,7 +1169,7 @@
         } else {
           renderQuizSummary(res.new_strength, res.next_review_estimate_days);
         }
-      }, 1400);
+      }, 1500);
     }
 
     function renderModalFallback(conceptId, conceptName) {
@@ -907,10 +1177,10 @@
       document.getElementById("modal-timer").textContent = "Self-Report";
       const body = document.getElementById("modal-body");
       body.innerHTML = `
-        <div style="font-size:1rem; font-weight:600; margin-bottom:16px;">Did you recall '${conceptName}' correctly?</div>
-        <div style="display:flex; gap:12px;">
-          <button class="btn" style="flex:1; background:var(--stable);" onclick="submitFallback(true)">Yes, I recalled it</button>
-          <button class="btn btn-danger" style="flex:1;" onclick="submitFallback(false)">No, I forgot</button>
+        <div style="font-size:1.05rem; font-weight:700; margin-bottom:20px;">Did you recall '${conceptName}' correctly?</div>
+        <div style="display:flex; gap:14px;">
+          <button class="btn" style="flex:1; justify-content:center; padding:12px;" onclick="submitFallback(true)">Yes, Recalled Correctly</button>
+          <button class="btn btn-danger" style="flex:1; justify-content:center; padding:12px;" onclick="submitFallback(false)">No, Forgot</button>
         </div>
       `;
     }
@@ -934,23 +1204,23 @@
 
     function renderQuizSummary(newStrength, nextReviewDays) {
       clearInterval(quizTimerInt);
-      document.getElementById("modal-timer").textContent = "Done";
+      document.getElementById("modal-timer").textContent = "Completed";
       const body = document.getElementById("modal-body");
 
       body.innerHTML = `
-        <div style="text-align:center; padding:10px 0; display:flex; flex-direction:column; gap:16px;">
-          <div style="font-size:1.5rem; font-weight:700;">Quiz Completed!</div>
-          <div style="font-size:1.1rem; color:var(--accent); font-weight:600;">
+        <div style="text-align:center; padding:10px 0; display:flex; flex-direction:column; gap:18px;">
+          <div style="font-size:1.5rem; font-weight:800;">Quiz Completed!</div>
+          <div style="font-size:1.25rem; color:#818cf8; font-weight:700;">
             Score: ${quizScore} / ${quizQuestions.length} Correct
           </div>
-          <div style="background:#0d1326; border:1px solid var(--panel-border); border-radius:10px; padding:16px;">
+          <div style="background:rgba(10, 15, 29, 0.7); border:1px solid rgba(255, 255, 255, 0.08); border-radius:14px; padding:18px;">
             <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
-              <span>Memory Strength</span>
-              <span>${initialStrength}d → <strong>${newStrength}d</strong></span>
+              <span style="color:var(--text-muted)">Memory Strength</span>
+              <span>${initialStrength}d → <strong style="color:#34d399">${newStrength}d</strong></span>
             </div>
-            <div style="font-size:0.85rem; color:var(--muted);">Next recommended review in ~${nextReviewDays} days</div>
+            <div style="font-size:0.85rem; color:var(--text-muted);">Next recommended review in ~${nextReviewDays} days</div>
           </div>
-          <button class="btn" style="width:100%; justify-content:center; padding:12px;" onclick="closeQuizModal()">Close & Refresh</button>
+          <button class="btn" style="width:100%; justify-content:center; padding:14px; font-size:0.95rem;" onclick="closeQuizModal()">Close & Refresh Dashboard</button>
         </div>
       `;
     }
