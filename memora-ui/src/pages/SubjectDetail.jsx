@@ -11,7 +11,7 @@ import { BackLink, Button, EmptyState, ErrorState, Field, GlassCard, HealthBadge
 const LEVELS = ['easy', 'medium', 'hard'];
 
 function AddTopicModal({ open, onClose, subjectId, modules, onCreated }) {
-  const { toast } = useApp();
+  const { learner, toast } = useApp();
   const blank = { name: '', module: '', description: '', difficulty: 'medium' };
   const [form, setForm] = useState(blank);
   const [busy, setBusy] = useState(false);
@@ -22,7 +22,7 @@ function AddTopicModal({ open, onClose, subjectId, modules, onCreated }) {
     if (!form.name.trim()) return toast('Give the topic a name.', 'error');
     setBusy(true);
     try {
-      await api.createTopic(subjectId, { ...form, name: form.name.trim(), module: form.module.trim() || 'Core' });
+      await api.createTopic(subjectId, { ...form, name: form.name.trim(), module: form.module.trim() || 'Core' }, learner?.id);
       toast(`Added topic “${form.name.trim()}”. Add questions to start reviewing it.`);
       setForm(blank);
       onCreated();

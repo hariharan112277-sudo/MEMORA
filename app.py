@@ -28,6 +28,7 @@ from routes.misc import misc_bp
 from routes.analytics import analytics_bp
 from routes.learners import learners_bp
 from routes.subjects import subjects_bp
+from routes.topics import topics_bp
 
 
 def create_app():
@@ -46,6 +47,7 @@ def create_app():
     app.register_blueprint(analytics_bp)
     app.register_blueprint(learners_bp)
     app.register_blueprint(subjects_bp)
+    app.register_blueprint(topics_bp)
 
     # Serve static assets from memora-ui/dist/assets
     @app.get("/assets/<path:filename>")

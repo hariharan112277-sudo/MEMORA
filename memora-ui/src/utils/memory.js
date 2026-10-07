@@ -98,7 +98,7 @@ export function normalizeConcept(c = {}) {
   };
 }
 
-export const normalizeConcepts = (res, ...keys) => asList(res, ...keys, 'concepts', 'topics', 'queue').map(normalizeConcept);
+export const normalizeConcepts = (res, ...keys) => asList(res, ...keys, 'weak_concepts', 'concepts', 'topics', 'queue').map(normalizeConcept);
 
 export function normalizeQuestion(q = {}) {
   const options = q.options ?? q.choices ?? [];

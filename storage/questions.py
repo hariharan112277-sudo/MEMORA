@@ -91,9 +91,184 @@ def generate_fallback_questions(concept_id: str):
     ]
 
 
+import threading
+
+_QUESTIONS_LOCK = threading.Lock()
+
+
+def _save_questions_unlocked(questions_data):
+    global _QUESTIONS_CACHE
+    _QUESTIONS_CACHE = questions_data
+    q_path = os.path.join(Config.DATA_DIR, "questions.json")
+    os.makedirs(os.path.dirname(q_path), exist_ok=True)
+    with open(q_path, "w", encoding="utf-8") as f:
+        json.dump(questions_data, f, indent=2)
+
+
+def format_question_for_api(q):
+    correct_idx = q.get("correct") if "correct" in q else q.get("correct_index", 0)
+    diff_val = q.get("difficulty", 0.5)
+    if isinstance(diff_val, (int, float)):
+        diff_score = float(diff_val)
+        if diff_score <= 0.35:
+            diff_label = "easy"
+        elif diff_score <= 0.6:
+            diff_label = "medium"
+        else:
+            diff_label = "hard"
+    else:
+        diff_label = str(diff_val).lower()
+        if diff_label == "easy":
+            diff_score = 0.3
+        elif diff_label == "medium":
+            diff_score = 0.5
+        else:
+            diff_score = 0.8
+
+    text = q.get("text") or q.get("prompt") or q.get("question") or ""
+
+    return {
+        "id": q.get("id"),
+        "text": text,
+        "question": text,
+        "options": q.get("options", []),
+        "correct": correct_idx,
+        "correct_index": correct_idx,
+        "explanation": q.get("explanation", "") or "",
+        "difficulty": diff_label,
+        "difficulty_score": diff_score,
+    }
+
+
 def get_questions_for_concept(concept_id: str):
     bank = _load_questions()
     return bank.get(concept_id, [])
+
+
+def get_questions_for_authoring(concept_id: str):
+    with _QUESTIONS_LOCK:
+        bank = _load_questions()
+        qs = bank.get(concept_id)
+        if not qs:
+            qs = generate_fallback_questions(concept_id)
+        return [format_question_for_api(q) for q in qs]
+
+
+def save_question_for_topic(concept_id: str, data: dict):
+    with _QUESTIONS_LOCK:
+        bank = _load_questions()
+        qs = bank.get(concept_id, [])
+        if not isinstance(qs, list):
+            qs = []
+
+        q_id = data.get("id") or f"q_{concept_id}_{int(random.random() * 1000000)}"
+        text = (data.get("text") or data.get("question") or "").strip()
+        options = [str(o).strip() for o in data.get("options", [])]
+        correct_idx = data.get("correct_index") if "correct_index" in data else data.get("correct", 0)
+        try:
+            correct_idx = int(correct_idx)
+        except (ValueError, TypeError):
+            correct_idx = 0
+
+        diff = data.get("difficulty", 0.5)
+        if isinstance(diff, str):
+            diff_str = diff.lower()
+            diff_num = 0.3 if diff_str == "easy" else (0.5 if diff_str == "medium" else 0.8)
+        else:
+            try:
+                diff_num = float(diff)
+            except (ValueError, TypeError):
+                diff_num = 0.5
+
+        new_q = {
+            "id": q_id,
+            "text": text,
+            "options": options,
+            "correct": correct_idx,
+            "explanation": data.get("explanation", "") or "",
+            "difficulty": diff_num,
+        }
+
+        idx = next((i for i, q in enumerate(qs) if str(q.get("id")) == str(q_id)), -1)
+        if idx >= 0:
+            qs[idx] = new_q
+        else:
+            qs.append(new_q)
+
+        bank[concept_id] = qs
+        _save_questions_unlocked(bank)
+        return format_question_for_api(new_q)
+
+
+def update_question_by_id(question_id: str, data: dict):
+    with _QUESTIONS_LOCK:
+        bank = _load_questions()
+        found_concept = None
+        found_idx = -1
+        for cid, qs in bank.items():
+            for i, q in enumerate(qs):
+                if str(q.get("id")) == str(question_id):
+                    found_concept = cid
+                    found_idx = i
+                    break
+            if found_concept:
+                break
+
+        if not found_concept or found_idx < 0:
+            return None
+
+        q = bank[found_concept][found_idx]
+        text = (data.get("text") or data.get("question") or q.get("text") or "").strip()
+        options = [str(o).strip() for o in data.get("options", q.get("options", []))]
+        correct_idx = data.get("correct_index") if "correct_index" in data else data.get("correct", q.get("correct", 0))
+        try:
+            correct_idx = int(correct_idx)
+        except (ValueError, TypeError):
+            correct_idx = 0
+
+        diff = data.get("difficulty", q.get("difficulty", 0.5))
+        if isinstance(diff, str):
+            diff_str = diff.lower()
+            diff_num = 0.3 if diff_str == "easy" else (0.5 if diff_str == "medium" else 0.8)
+        else:
+            try:
+                diff_num = float(diff)
+            except (ValueError, TypeError):
+                diff_num = 0.5
+
+        updated_q = {
+            "id": question_id,
+            "text": text,
+            "options": options,
+            "correct": correct_idx,
+            "explanation": data.get("explanation", q.get("explanation", "")),
+            "difficulty": diff_num,
+        }
+        bank[found_concept][found_idx] = updated_q
+        _save_questions_unlocked(bank)
+        return format_question_for_api(updated_q)
+
+
+def delete_question_by_id(question_id: str) -> bool:
+    with _QUESTIONS_LOCK:
+        bank = _load_questions()
+        found_concept = None
+        found_idx = -1
+        for cid, qs in bank.items():
+            for i, q in enumerate(qs):
+                if str(q.get("id")) == str(question_id):
+                    found_concept = cid
+                    found_idx = i
+                    break
+            if found_concept:
+                break
+
+        if not found_concept or found_idx < 0:
+            return False
+
+        bank[found_concept].pop(found_idx)
+        _save_questions_unlocked(bank)
+        return True
 
 
 def get_question(concept_id: str, question_id: str):
@@ -122,3 +297,4 @@ def sample_questions(concept_id: str, limit: int = 5):
         sanitized.append(q_copy)
 
     return sanitized
+

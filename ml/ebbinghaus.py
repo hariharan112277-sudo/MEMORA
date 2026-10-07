@@ -56,7 +56,7 @@ def status_for(r: float) -> str:
     """Classify a retention value into the same bands the dashboard uses."""
     if r < 0.5:
         return "critical"
-    if r < 0.75:
+    if r < 0.80:
         return "weak"
     return "stable"
 

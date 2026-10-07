@@ -37,9 +37,18 @@ pip install -r requirements.txt -r requirements-dev.txt
 python data/generate_dataset.py   # Wrote 5,200 rows
 python ml/train_model.py          # Saves model + metrics.json
 
-# 4. Start the server
+# 4. Build React frontend for production serving
+cd memora-ui && npm install && npm run build && cd ..
+
+# 5. Start the server
 python app.py
 ```
+
+> **Frontend Development Mode**: To run the Vite dev server with hot reload:
+> ```bash
+> cd memora-ui && npm run dev
+> ```
+> (Optionally set `VITE_API_URL=http://localhost:5000` if API is on a non-default host).
 
 Then visit **`http://localhost:5000/dashboard`** in your browser to access the single-page dashboard.
 
@@ -62,7 +71,7 @@ bash scripts/verify.sh
 
 ## Dashboard Features
 
-- **KPI Cards**: Overall learner retention %, count of Stable ($\ge 75\%$), Weak ($50-75\%$), and Critical ($< 50\%$) concepts.
+- **KPI Cards**: Overall learner retention %, count of Stable ($\ge 80\%$), Weak ($50-80\%$), and Critical ($< 50\%$) concepts.
 - **Tracked Concepts List**: Color-coded retention progress bars, days since review, memory strength $S$, and quick revision triggers.
 - **Priority Weak Panel**: Filtered list of concepts needing immediate attention sorted worst-first.
 - **Revision Schedule**: Overdue items highlighted in red with exact overdue days, followed by upcoming due items.

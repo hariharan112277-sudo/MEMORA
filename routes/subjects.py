@@ -184,8 +184,10 @@ def create_subject():
 @subjects_bp.post("/api/subjects/<subject_id>/topics")
 def create_topic(subject_id):
     data = request.get_json() or {}
+    learner_id = data.get("learner_id")
+    if not learner_id:
+        return jsonify({"error": "learner_id is required"}), 400
     name = data.get("name") or data.get("title") or "New Topic"
-    learner_id = data.get("learner_id", "L_HARIHARAN")
 
     res = store.add_concept(learner_id, name, float(data.get("difficulty", 0.5)))
     topic_id = res["concept_id"] if res else name.lower().replace(" ", "_")

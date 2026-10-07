@@ -73,7 +73,10 @@ export const api = {
   createLearner: (data) => request('/api/learners', { method: 'POST', body: data }),
   getAnalytics: (learnerId) => request(`/api/analytics?learner_id=${learnerId}`),
   getConcepts: (learnerId) => request(`/api/concepts?learner_id=${learnerId}`),
-  getWeakConcepts: (learnerId) => request(`/api/concepts/weak?learner_id=${learnerId}`),
+  getWeakConcepts: async (learnerId) => {
+    const res = await request(`/api/concepts/weak?learner_id=${learnerId}`);
+    return { concepts: res.weak_concepts ?? res.concepts ?? [] };
+  },
   getSchedule: (learnerId) => request('/api/schedule/generate', { method: 'POST', body: { learner_id: learnerId } }),
   predictRetention: (learnerId, conceptId) =>
     request('/api/retention/predict', { method: 'POST', body: { learner_id: learnerId, concept_id: conceptId } }),
@@ -81,7 +84,8 @@ export const api = {
   createSubject: (learnerId, subjectData) =>
     request('/api/subjects', { method: 'POST', body: { learner_id: learnerId, ...subjectData } }),
   getSubjectDetail: (subjectId) => request(`/api/subjects/${subjectId}`),
-  createTopic: (subjectId, topicData) => request(`/api/subjects/${subjectId}/topics`, { method: 'POST', body: topicData }),
+  createTopic: (subjectId, topicData, learnerId) =>
+    request(`/api/subjects/${subjectId}/topics`, { method: 'POST', body: { learner_id: learnerId || topicData?.learner_id, ...topicData } }),
   getQuestions: (topicId) => request(`/api/topics/${topicId}/questions`),
   createQuestion: (topicId, questionData) =>
     request(`/api/topics/${topicId}/questions`, { method: 'POST', body: questionData }),
