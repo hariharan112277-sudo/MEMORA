@@ -64,7 +64,7 @@ function Heatmap({ concepts }) {
 }
 
 export default function AnalyticsHub() {
-  const { learner, version } = useApp();
+  const { learner, version, mode } = useApp();
   const lid = learner?.id;
   const [showBaseline, setShowBaseline] = useState(false);
 
@@ -126,8 +126,8 @@ export default function AnalyticsHub() {
 
       <GlassCard className="p-5 sm:p-6">
         <SectionTitle
-          title="Decay curves by subject"
-          hint="Projected average retention over 30 days. Solid lines are the Random Forest model."
+          title={mode === 'live' ? "Decay curves by subject" : "Decay curves by subject (heuristic projection)"}
+          hint={mode === 'live' ? "Projected average retention over 30 days. Solid lines are the Random Forest model." : "Projected average retention over 30 days (heuristic offline estimates)."}
           action={
             <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-600">
               <input type="checkbox" checked={showBaseline} onChange={(e) => setShowBaseline(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-indigo-600" />
@@ -135,7 +135,7 @@ export default function AnalyticsHub() {
             </label>
           }
         />
-        <SubjectDecayChart data={curveData} series={series} showBaseline={showBaseline} />
+        <SubjectDecayChart data={curveData} series={series} showBaseline={showBaseline} rfLabel={mode === 'live' ? 'RF' : 'Offline'} />
       </GlassCard>
 
       <GlassCard className="p-5 sm:p-6">

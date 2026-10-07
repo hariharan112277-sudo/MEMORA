@@ -62,6 +62,21 @@ def predict():
             strength_fallback=concept["strength"],
         )
 
+        if ml_result["method"] == "random_forest":
+            rf_curve = []
+            for d in range(31):
+                pt = predict_retention(
+                    difficulty=features_used["difficulty"],
+                    days_since_last_review=features_used["days_since_last_review"] + d,
+                    quiz_accuracy=features_used["quiz_accuracy"],
+                    response_time=features_used["response_time"],
+                    attempt_count=features_used["attempt_count"],
+                    strength_fallback=concept["strength"],
+                )
+                rf_curve.append({"day": d, "rf": round(pt["retention"], 4)})
+        else:
+            rf_curve = None
+
         return jsonify({
             "learner_id": learner_id,
             "concept_id": concept_id,
@@ -75,6 +90,7 @@ def predict():
             "features_used": features_used,
             "status": ebbinghaus.status_for(r_formula),
             "curve": ebbinghaus.curve_points(concept["strength"]),
+            "rf_curve": rf_curve,
         })
 
 

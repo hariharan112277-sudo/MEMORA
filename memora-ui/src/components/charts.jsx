@@ -25,7 +25,7 @@ function TooltipCard({ active, payload, label, labelFormatter, valueSuffix = '%'
 }
 
 /** Single-concept forgetting curve: RF prediction vs classic Ebbinghaus baseline. */
-export function DecayChart({ curve, height = 300 }) {
+export function DecayChart({ curve, height = 300, rfLabel = 'Random Forest' }) {
   return (
     <div style={{ height }} className="w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -42,7 +42,7 @@ export function DecayChart({ curve, height = 300 }) {
           <Tooltip content={<TooltipCard labelFormatter={(d) => (d === 0 ? 'Today' : `In ${d} days`)} />} />
           <ReferenceLine y={80} stroke="#10b981" strokeDasharray="4 4" label={{ value: 'Stable', position: 'insideTopRight', fill: '#059669', fontSize: 10, fontWeight: 700 }} />
           <ReferenceLine y={50} stroke="#f43f5e" strokeDasharray="4 4" label={{ value: 'Critical', position: 'insideTopRight', fill: '#e11d48', fontSize: 10, fontWeight: 700 }} />
-          <Area type="monotone" dataKey="rf" name="Random Forest" stroke="#4f46e5" strokeWidth={2.5} fill="url(#rfFill)" dot={false} activeDot={{ r: 5 }} />
+          <Area type="monotone" dataKey="rf" name={rfLabel} stroke="#4f46e5" strokeWidth={2.5} fill="url(#rfFill)" dot={false} activeDot={{ r: 5 }} />
           <Line type="monotone" dataKey="baseline" name="Ebbinghaus baseline" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={false} />
         </AreaChart>
       </ResponsiveContainer>
@@ -51,7 +51,7 @@ export function DecayChart({ curve, height = 300 }) {
 }
 
 /** Multi-subject projected retention. `series` = [{ key, name, color }]; `showBaseline` draws dashed Ebbinghaus lines. */
-export function SubjectDecayChart({ data, series, showBaseline, height = 320 }) {
+export function SubjectDecayChart({ data, series, showBaseline, rfLabel = 'RF', height = 320 }) {
   return (
     <div style={{ height }} className="w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -64,7 +64,7 @@ export function SubjectDecayChart({ data, series, showBaseline, height = 320 }) 
           <ReferenceLine y={80} stroke="#10b981" strokeDasharray="4 4" />
           <ReferenceLine y={50} stroke="#f43f5e" strokeDasharray="4 4" />
           {series.map((s) => (
-            <Line key={s.key} type="monotone" dataKey={s.key} name={`${s.name} (RF)`} stroke={s.color} strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+            <Line key={s.key} type="monotone" dataKey={s.key} name={rfLabel ? `${s.name} (${rfLabel})` : s.name} stroke={s.color} strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
           ))}
           {showBaseline &&
             series.map((s) => (

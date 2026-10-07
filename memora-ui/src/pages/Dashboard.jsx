@@ -32,7 +32,7 @@ function ConceptCard({ c }) {
 }
 
 export default function Dashboard() {
-  const { learner, profile, version } = useApp();
+  const { learner, profile, version, mode } = useApp();
   const lid = learner?.id;
   const [selectedId, setSelectedId] = useState(null);
 
@@ -56,6 +56,16 @@ export default function Dashboard() {
 
   const prediction = useAsync(async () => (activeId ? api.predictRetention(lid, activeId) : null), [lid, activeId, version]);
   const curve = useMemo(() => {
+    const rfCurve = prediction.data?.rf_curve;
+    if (Array.isArray(rfCurve) && rfCurve.length && active) {
+      return rfCurve.map((p, i) => {
+        const day = p.day ?? i;
+        const rfVal = typeof p.rf === 'number' ? +(p.rf * 100).toFixed(1) : +Number(p.rf || 0).toFixed(1);
+        const baseVal = +(baselineRetention(active.strength, day) * 100).toFixed(1);
+        return { day, rf: rfVal, baseline: baseVal };
+      });
+    }
+
     const fromApi = prediction.data?.curve || prediction.data?.predicted_curve;
     if (Array.isArray(fromApi) && fromApi.length && active) {
       return fromApi.map((p, i) => {
@@ -165,7 +175,28 @@ export default function Dashboard() {
               <span>{dueLabel(active.days_until_review)}</span>
             </p>
           )}
-          <DecayChart curve={curve} height={270} />
+          {prediction.data && (
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="font-semibold text-slate-700">Model vs formula:</span>
+                <span>Formula: <b className="text-obsidian">{prediction.data.retention_formula != null ? `${(prediction.data.retention_formula * 100).toFixed(1)}%` : 'N/A'}</b></span>
+                <span>vs Random Forest: <b className="text-obsidian">{prediction.data.retention_ml != null ? `${(prediction.data.retention_ml * 100).toFixed(1)}%` : 'N/A'}</b></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  title={prediction.data.features_used ? JSON.stringify(prediction.data.features_used, null, 2) : undefined}
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                    prediction.data.ml_method === 'random_forest'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-amber-100 text-amber-800 border border-amber-300'
+                  }`}
+                >
+                  {prediction.data.ml_method === 'random_forest' ? 'Random Forest ML' : 'Ebbinghaus Fallback'}
+                </span>
+              </div>
+            </div>
+          )}
+          <DecayChart curve={curve} height={270} rfLabel={mode === 'live' ? 'Random Forest' : 'Projected (offline demo)'} />
         </GlassCard>
       </div>
 
