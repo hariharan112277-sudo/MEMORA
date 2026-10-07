@@ -61,7 +61,7 @@ export default function Dashboard() {
       return rfCurve.map((p, i) => {
         const day = p.day ?? i;
         const rfVal = typeof p.rf === 'number' ? +(p.rf * 100).toFixed(1) : +Number(p.rf || 0).toFixed(1);
-        const baseVal = +(baselineRetention(active.strength, day) * 100).toFixed(1);
+        const baseVal = +(baselineRetention(active.strength, active.elapsed_days + day) * 100).toFixed(1);
         return { day, rf: rfVal, baseline: baseVal };
       });
     }
