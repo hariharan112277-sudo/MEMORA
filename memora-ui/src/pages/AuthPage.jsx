@@ -132,6 +132,7 @@ export default function AuthPage({ mode }) {
           <p className="mt-1.5 text-sm text-slate-500">
             {isSignup ? 'Tell us what you are working toward and how much you want to review each day.' : 'Log in with the email you signed up with. No password is needed in this build.'}
           </p>
+          <p className="mt-1 text-xs text-slate-500 font-medium">(Demo profiles — no password required.)</p>
 
           <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
             {isSignup && (

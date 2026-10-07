@@ -308,7 +308,11 @@ export async function mockRequest(path, { method = 'GET', params, body } = {}) {
     s.attempts.filter((a) => a.concept_id === q.concept_id).forEach((a) => { lastSeen[a.question_id] = Math.max(lastSeen[a.question_id] ?? -1, a.day); });
     const pool = s.questions.filter((x) => x.topic_id === q.concept_id).sort(() => Math.random() - 0.5);
     pool.sort((a, b) => (lastSeen[a.id] ?? -1) - (lastSeen[b.id] ?? -1));
-    return { questions: pool.slice(0, limit) };
+    const sanitized = pool.slice(0, limit).map((qn) => {
+      const { correct_index, explanation, ...rest } = qn;
+      return rest;
+    });
+    return { questions: sanitized };
   }
   if (p === '/api/quiz/attempt' && method === 'POST') {
     const t = s.topics.find((x) => x.id === body?.concept_id);

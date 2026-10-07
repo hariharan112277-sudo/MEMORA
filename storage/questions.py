@@ -140,8 +140,19 @@ def format_question_for_api(q):
     }
 
 
+CONCEPT_ALIASES = {
+    "probability_and_statistics": "probability_stats",
+    "probability_stats": "probability_and_statistics",
+}
+
+
 def get_questions_for_concept(concept_id: str):
     bank = _load_questions()
+    if concept_id in bank:
+        return bank[concept_id]
+    alias = CONCEPT_ALIASES.get(concept_id)
+    if alias and alias in bank:
+        return bank[alias]
     return bank.get(concept_id, [])
 
 
@@ -149,6 +160,8 @@ def get_questions_for_authoring(concept_id: str):
     with _QUESTIONS_LOCK:
         bank = _load_questions()
         qs = bank.get(concept_id)
+        if not qs and concept_id in CONCEPT_ALIASES:
+            qs = bank.get(CONCEPT_ALIASES[concept_id])
         if not qs:
             qs = generate_fallback_questions(concept_id)
         return [format_question_for_api(q) for q in qs]

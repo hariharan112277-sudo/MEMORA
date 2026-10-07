@@ -79,7 +79,7 @@ export default function Settings() {
 
         <GlassCard className="p-6">
           <h2 className="text-base font-bold">Notifications</h2>
-          <p className="mt-0.5 text-xs text-slate-500">Preferences are stored on this device.</p>
+          <p className="mt-0.5 text-xs text-slate-500">Preferences are stored locally in this demo build.</p>
           <div className="mt-2 divide-y divide-slate-100">
             {NOTIFICATIONS.map(([key, label, desc]) => (
               <Toggle key={key} label={label} description={desc} checked={!!form.notifications[key]} onChange={(v) => setForm((f) => ({ ...f, notifications: { ...f.notifications, [key]: v } }))} />
